@@ -1,71 +1,60 @@
-Introduction
-============
+はじめに
+========
 
-This is the documentation for Twig, the flexible, fast, and secure template
-language for PHP.
+これは柔軟で、速く、セキュアな PHP 言語のテンプレートである Twig のドキュメントです。
 
-If you have any exposure to other text-based template languages, such as
-Smarty, Django, or Jinja, you should feel right at home with Twig. It's both
-designer and developer friendly by sticking to PHP's principles and adding
-functionality useful for templating environments.
+Smarty、Django もしくは Jinja などのほかのテキストベースのテンプレート言語に触れる機会があれば、Twig の扱いにすぐ慣れるでしょう。PHP の原則を忠実に守りテンプレート環境に役立つ機能性を追加することでこれはデザイナーと開発者の両方に親しみやすいものになっています。
 
-The key-features are...
+キーフィーチャは次のとおりです...
 
- * *Fast*: Twig compiles templates down to plain optimized PHP code. The
-   overhead compared to regular PHP code was reduced to the very minimum.
+ * *速い*: Twig はテンプレートをプレーンな最適化されたプレーンな PHP コードにコンパイルします。PHP コードと比べたオーバーヘッドは最小限に減りました。
 
- * *Secure*: Twig has a sandbox mode to evaluate untrusted template code. This
-   allows Twig to be used as a templating language for applications where
-   users may modify the template design.
+ * *安全である*: Twig は信頼できないテンプレートコードを評価するサンドボックスモードを持ちます。このことによってユーザーがテンプレートデザインを修正することが許可されるアプリケーションのテンプレート言語で使えるようになっています。
 
- * *Flexible*: Twig is powered by a flexible lexer and parser. This allows the
-   developer to define its own custom tags and filters, and create its own
-   DSL.
+ * *柔軟である*: Twig は柔軟なレクサーとパーサーによって支えられています。これによって開発者は独自のカスタムタグとフィルターを定義し、また独自の DSL を作ることができます。
 
-Prerequisites
--------------
+前提要件
+--------
 
-Twig needs at least **PHP 5.2.4** to run.
+Twig を実行するには少なくとも **PHP 5.2.4** が必要です。
 
-Installation
-------------
-
-You have multiple ways to install Twig. If you are unsure what to do, go with
-the tarball.
-
-### From the tarball release
-
- 1. Download the most recent tarball from the [download page](http://www.twig-project.org/installation)
- 2. Unpack the tarball
- 3. Move the files somewhere in your project
-
-### Installing the development version
-
- 1. Install Subversion
- 2. `svn co http://svn.twig-project.org/trunk/ twig`
-
-### Installing the PEAR package
-
- 1. Install PEAR
- 2. pear channel-discover pear.twig-project.org
- 3. pear install twig/Twig (or pear install twig/Twig-beta)
-
-Basic API Usage
+インストール方法
 ---------------
 
-This section gives you a brief introduction to the PHP API for Twig.
+Twig をインストールする方法は複数あります。何をすればよいのかわからなければ、タールボールからインストールしてください。
 
-The first step to use Twig is to register its autoloader:
+### タールボールリリースから
+
+ 1. [ダウンロードページ](http://www.twig-project.org/installation)から最新のタールボールをダウンロードする
+ 2. タールボールを展開する
+ 3. ファイルをあなたのプロジェクトのどこかに移動させる
+
+### 開発バージョンをインストールする
+
+ 1. Subversion をインストールする
+ 2. `svn co http://svn.twig-project.org/trunk/ twig`
+
+### PEAR パッケージをインストールする
+
+ 1. PEAR をインストールする
+ 2. pear channel-discover pear.twig-project.org
+ 3. pear install twig/Twig (もしくは pear install twig/Twig-beta)
+
+基本的な API の使い方
+---------------------
+
+この節では Twig の PHP API の手短な説明をします。
+
+Twig を使う最初のステップはオートローダーを登録することです:
 
     [php]
     require_once '/path/to/lib/Twig/Autoloader.php';
     Twig_Autoloader::register();
 
-Replace the `/path/to/lib/` path with the path you used for Twig installation.
+`/path/to/lib/` パスを Twig がインストールされているパスに置き換えます。
 
 >**NOTE**
->Twig follows the PEAR convention names for its classes, which means you can
->easily integrate Twig classes loading in your own autoloader.
+>Twig は PEAR のクラス命名規約に従います。このことは Twig クラスロード機能をあなた独自のオートローダーに簡単に統合できることを意味します。
 
     [php]
     $loader = new Twig_Loader_String();
@@ -75,14 +64,11 @@ Replace the `/path/to/lib/` path with the path you used for Twig installation.
 
     $template->display(array('name' => 'Fabien'));
 
-Twig uses a loader (`Twig_Loader_String`) to locate templates, and an
-environment (`Twig_Environment`) to store the configuration.
+Twig はテンプレートの位置を割り出すのにローダークラス (`Twig_Loader_String`) を使い、コンフィギュレーションを保存するのに環境クラス (`Twig_Environment`) を使います。
 
-The `loadTemplate()` method uses the loader to locate and load the template
-and returns a template object (`Twig_Template`) which is suitable for
-rendering with the `display()` method.
+`loadTemplate()` メソッドはテンプレートの位置を割り出しロードし`display()` メソッドでレンダリングするのに最適なテンプレートオブジェクト (`Twig_Template`) を返すためにローダーを使います。
 
-Twig also comes with a filesystem loader:
+Twig はファイルシステムローダーも備えています:
 
     [php]
     $loader = new Twig_Loader_Filesystem('/path/to/templates');
