@@ -61,7 +61,8 @@ same::
 >but the print statement. If you access variables inside tags don't put the
 >braces around.
 
-If a variable or attribute does not exist you will get back a `null` value.
+If a variable or attribute does not exist you will get back a `null` value
+(which can be testes with the `none` expression).
 
 >**SIDEBAR**
 >Implementation
@@ -364,11 +365,18 @@ When automatic escaping is enabled everything is escaped by default except for
 values explicitly marked as safe. Those can be marked in the template by using
 the `|safe` filter.
 
-Functions returning template data (like macros and `parent`) return safe markup always.
+Functions returning template data (like macros and `parent`) always return
+safe markup.
 
 >**NOTE**
 >Twig is smart enough to not escape an already escaped value by the `escape`
 >filter.
+
+-
+
+>**NOTE**
+>The chapter for the developers give more information about when and how
+>automatic escaping is applied.
 
 List of Control Structures
 --------------------------
@@ -394,6 +402,38 @@ provided in a variable called `users`:
 >A sequence can be either an array or an object implementing the `Iterator`
 >interface.
 
+If you do need to iterate over a sequence of numbers, you can use the `..`
+operator (as of Twig 0.9.5):
+
+    [twig]
+    {% for i in 0..10 %}
+      * {{ i }}
+    {% endfor %}
+
+The above snippet of code would print all numbers from 0 to 9 (the high value
+is never part of the generated array).
+
+It can be also useful with letters:
+
+    [twig]
+    {% for letter in 'a'..'z' %}
+      * {{ letter }}
+    {% endfor %}
+
+The `..` operator can take any expression at both sides:
+
+    [twig]
+    {% for letter in 'a'|upper..'z'|upper %}
+      * {{ letter }}
+    {% endfor %}
+
+If you need a step different from 1, you can use the `range` filter instead:
+
+    [twig]
+    {% for i in 0|range(10, 2) %}
+      * {{ i }}
+    {% endfor %}
+
 Inside of a `for` loop block you can access some special variables:
 
 | Variable              | Description
@@ -418,7 +458,7 @@ replacement block by using `else`:
         <li>{{ user.username|e }}</li>
       {% else %}
         <li><em>no user found</em></li>
-      {% endif %}
+      {% endfor %}
     </ul>
 
 By default, a loop iterates over the values of the sequence. You can iterate
@@ -538,6 +578,10 @@ the `set` tag and can have multiple targets:
     [twig]
     {% set foo as 'foo' %}
 
+    {% set foo as [1, 2] %}
+
+    {% set foo as ['foo': 'bar] %}
+
     {% set foo as 'foo' ~ 'bar' %}
 
     {% set foo, bar as 'foo', 'bar' %}
@@ -572,6 +616,25 @@ An included file can be evaluated in the sandbox environment by appending
 
     [twig]
     {% include 'user.html' sandboxed %}
+
+You can also restrict the variables passed to the template by explicitly pass
+them as an array:
+
+    [twig]
+    {% include 'foo' with ['foo': 'bar'] %}
+
+    {% set vars as ['foo': 'bar'] %}
+    {% include 'foo' with vars %}
+
+The most secure way to include a template is to use both the `sandboxed` mode,
+and to pass the minimum amount of variables needed for the template to be
+rendered correctly:
+
+    [twig]
+    {% include 'foo' sandboxed with vars %}
+
+>**NOTE**
+>The `with` keyword is supported as of Twig 0.9.5.
 
 ### Import
 
@@ -640,10 +703,15 @@ Twig allows basic expressions everywhere. These work very similar to regular
 PHP and even if you're not working with PHP you should feel comfortable with
 it.
 
+The operator precedence is as follows, with the lowest-precedence operators
+listed first: `or`, `and`, `==`, `!=`, `<`, `>`, `>=`, `<=`, `in`, `+`, `-`,
+`~`, `*`, `/`, `%`, `//`, `not`, and `[`.
+
 ### Literals
 
 The simplest form of expressions are literals. Literals are representations
-for PHP types such as strings and numbers. The following literals exist:
+for PHP types such as strings, numbers, and arrays. The following literals
+exist:
 
  * `"Hello World"`: Everything between two double or single quotes is a
    string. They are useful whenever you need a string in the template (for
@@ -653,6 +721,17 @@ for PHP types such as strings and numbers. The following literals exist:
  * `42` / `42.23`: Integers and floating point numbers are created by just
    writing the number down. If a dot is present the number is a float,
    otherwise an integer.
+
+ * `[foo, bar]`: Arrays are defined by a sequence of expressions separated by
+   a comma (`,`) and wrapped with squared brackets (`[]`). As an array element
+   can be any valid expression, arrays can be nested. The array notation is
+   only available as of Twig 0.9.5.
+
+ * `true` / `false` / `none`: `true` represents the true value, `false`
+   represents the false value.
+
+ * `none`: `none` represents no specific value (the equivalent of `null` in
+   PHP). This is the value returned when a variable does not exist.
 
 ### Math
 
@@ -668,9 +747,6 @@ but exists for completeness' sake. The following operators are supported:
 
  * `/`: Divide two numbers. The return value will be a floating point number.
    `{{ 1 / 2 }}` is `{{ 0.5 }}`.
-
- * `//`: Divide two numbers and return the truncated integer result. `{{ 20 //
-   7 }}` is `2`.
 
  * `%`: Calculate the remainder of an integer division. `{{ 11 % 7 }}` is `4`.
 
@@ -711,6 +787,15 @@ The following comparison operators are supported in any expression: `==`,
 The following operators are very useful but don't fit into any of the other
 two categories:
 
+ * `in` (new in Twig 0.9.5): Perform containment test. Returns `true` if the
+   left operand is contained in the right. {{ 1 in [1, 2, 3] }} would for
+   example return `true`. To perform a negative test, the whole expression
+   should be prefixed with `not` ({{ not 1 in [1, 2, 3] }} would return
+   `false`).
+
+ * `..` (new in Twig 0.9.5): Creates a sequence based on the operand before
+   and after the operator (see the `for` tag for some usage examples).
+
  * `|`: Applies a filter.
 
  * `~`: Converts all operands into strings and concatenates them. `{{ "Hello "
@@ -732,6 +817,8 @@ The `date` filter is able to format a date to a given format:
 
     [twig]
     {{ post.published_at|date("m/d/Y") }}
+
+The `date` filter accepts both timestamps and `DateTime` instances.
 
 ### `format`
 
@@ -758,6 +845,14 @@ otherwise:
 
     [twig]
     {{ var|odd ? 'odd' : 'even' }}
+
+### `floor`
+
+The `floor` filter divides two numbers and return the truncated integer
+result
+
+    [twig]
+    {{ 20|floor(7) }} {# returns 2 #}
 
 ### `encoding`
 
@@ -812,6 +907,64 @@ the length of a string.
 ### `sort`
 
 The `sort` filter sorts an array.
+
+### `in` (new in Twig 0.9.5)
+
+Returns true if the value is contained within another one.
+
+    [twig]
+    {# returns true #}
+
+    {{ 1|in([1, 2, 3]) }}
+
+    {{ 'cd'|in('abcde') }}
+
+You can use this filter to perform a containment test on strings, arrays, or
+objects implementing the `Traversable` interface.
+
+The `in` operator is a syntactic sugar for the `in` filter:
+
+    [twig]
+    {% if 1 in [1, 2, 3] %}
+      TRUE
+    {% endif %}
+
+    {# is equivalent to #}
+
+    {% if 1|in([1, 2, 3]) %}
+      TRUE
+    {% endif %}
+
+### `range` (new in Twig 0.9.5)
+
+Returns a list containing a sequence of numbers. The left side of the filter
+represents the low value. The first argument of the filter is mandatory and
+represents the high value. The second argument is optional and represents the
+step (which defaults to `1`).
+
+If you do need to iterate over a sequence of numbers:
+
+    [twig]
+    {% for i in 0|range(10) %}
+      * {{ i }}
+    {% endfor %}
+
+>**TIP**
+>The `range` filter works as the native PHP `range` function.
+
+The `..` operator (see above) is a syntactic sugar for the `range` filter
+(with a step of 1):
+
+    [twig]
+    {% for i in 0|range(10) %}
+      * {{ i }}
+    {% endfor %}
+
+    {# is equivalent to #}
+
+    {% for i in 0..10 %}
+      * {{ i }}
+    {% endfor %}
 
 ### `default`
 

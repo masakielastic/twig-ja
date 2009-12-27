@@ -97,10 +97,8 @@ The following options are available:
     * An absolute path where to store the compiled templates.
 
  * `auto_reload`: When developing with Twig, it's useful to recompile the
-   template whenever the source code changes. This is the default behavior for
-   `Twig_Loader_Filesystem` for instance. In a production environment, you can
-   set this option to `false` for better performance. If you don't provide the
-   `auto_reload` option, it will be determined automatically base on the
+   template whenever the source code changes. If you don't provide a value for
+   the `auto_reload` option, it will be determined automatically based on the
    `debug` value.
 
 >**CAUTION**
@@ -110,6 +108,10 @@ The following options are available:
 
 Loaders
 -------
+
+>**CAUTION**
+>This section describes the loaders as implemented in Twig version 0.9.4 and
+>above.
 
 Loaders are responsible for loading templates from a resource such as the file
 system.
@@ -130,21 +132,28 @@ Here a list of the built-in loaders Twig provides:
    can find templates in folders on the file system and is the preferred way
    to load them.
 
-       [php]
-       $loader = new Twig_Loader_Filesystem($templateDir);
+        [php]
+        $loader = new Twig_Loader_Filesystem($templateDir);
 
  * `Twig_Loader_String`: Loads templates from a string. It's a dummy loader as
    you pass it the source code directly.
 
-       [php]
-       $loader = new Twig_Loader_String($cacheDir);
+        [php]
+        $loader = new Twig_Loader_String();
 
  * `Twig_Loader_Array`: Loads a template from a PHP array. It's passed an
    array of strings bound to template names. This loader is useful for unit
    testing.
 
-       [php]
-       $loader = new Twig_Loader_Array($templates);
+        [php]
+        $loader = new Twig_Loader_Array($templates);
+
+>**TIP**
+>When using the `Array` or `String` loaders with a cache mechanism, you should
+>know that a new cache key is generated each time a template content "changes"
+>(the cache key being the source code of the template). If you don't want to
+>see your cache grows out of control, you need to take care of clearing the old
+>cache file by yourself.
 
 ### Create your own Loader
 
@@ -154,52 +163,55 @@ All loaders implement the `Twig_LoaderInterface`:
     interface Twig_LoaderInterface
     {
       /**
-       * Loads a template by name.
-       *
-       * @param  string $name The template name
-       *
-       * @return string The class name of the compiled template
-       */
-      public function load($name);
-
-      /**
-       * Sets the Environment related to this loader.
-       *
-       * @param Twig_Environment $env A Twig_Environment instance
-       */
-      public function setEnvironment(Twig_Environment $env);
-    }
-
-But if you want to create your own loader, you'd better inherit from the
-`Twig_Loader` class, which already provides a lot of useful features. In this
-case, you just need to implement the `getSource()` method. As an example, here
-is how the built-in `Twig_Loader_String` reads:
-
-    [php]
-    class Twig_Loader_String extends Twig_Loader
-    {
-      /**
        * Gets the source code of a template, given its name.
        *
        * @param  string $name string The name of the template to load
        *
-       * @return array An array consisting of the source code as the first element,
-       *               and the last modification time as the second one
-       *               or false if it's not relevant
+       * @return string The template source code
        */
+      public function getSource($name);
+
+      /**
+       * Gets the cache key to use for the cache for a given template name.
+       *
+       * @param  string $name string The name of the template to load
+       *
+       * @return string The cache key
+       */
+      public function getCacheKey($name);
+
+      /**
+       * Returns true if the template is still fresh.
+       *
+       * @param string    $name The template name
+       * @param timestamp $time The last modification time of the cached template
+       */
+      public function isFresh($name, $time);
+    }
+
+As an example, here is how the built-in `Twig_Loader_String` reads:
+
+    [php]
+    class Twig_Loader_String implements Twig_LoaderInterface
+    {
       public function getSource($name)
       {
-        return array($name, false);
+        return $name;
+      }
+
+      public function getCacheKey($name)
+      {
+        return $name;
+      }
+
+      public function isFresh($name, $time)
+      {
+        return false;
       }
     }
 
-The `getSource()` method must return an array of two values:
-
- * The first one is the template source code;
-
- * The second one is the last modification time of the template (used by the
-   auto-reload feature), or `false` if the loader does not support
-   auto-reloading.
+The `isFresh()` method must return `true` if the current cached template is
+still fresh, given the last modification time, or `false` otherwise.
 
 Using Extensions
 ----------------
@@ -296,6 +308,44 @@ You can also change the escaping mode locally by using the `autoescape` tag:
       {% var|safe %}     {# var won't be escaped #}
       {% var|escape %}   {# var won't be doubled-escaped #}
     {% endautoescape %}
+
+>**WARNING**
+>The `autoescape` tag has no effect on included files.
+
+The escaping rules are implemented as follows (it describes the behavior of
+Twig 0.9.5 and above):
+
+ * Literals (integers, booleans, arrays, ...) used in the template directly as
+   variables or filter arguments are never automatically escaped:
+
+        [twig]
+        {{ "Twig<br />" }} {# won't be escaped #}
+
+        {% set text as "Twig<br />" %}
+        {{ text }} {# will be escaped #}
+
+ * Escaping is applied before any other filter is applied (the reasoning
+   behind this is that filter transformations should be safe, as the filtered
+   value and all its arguments are escaped):
+
+        [twig]
+        {{ var|nl2br }} {# is equivalent to {{ var|escape|nl2br }} #}
+
+ * The `safe` filter can be used anywhere in the filter chain:
+
+        [twig]
+        {{ var|upper|nl2br|safe }} {# is equivalent to {{ var|safe|upper|nl2br }} #}
+
+ * Automatic escaping is applied to filter arguments, except for literals:
+
+        [twig]
+        {{ var|foo("bar") }} {# "bar" won't be escaped #}
+        {{ var|foo(bar) }} {# bar will be escaped #}
+        {{ var|foo(bar|safe) }} {# bar won't be escaped #}
+
+ * Automatic escaping is not applied if one of the filter in the chain has the
+   `is_escaper` option set to `true` (this is the case for the built-in
+   `escaper`, `safe`, and `urlencode` filters for instance).
 
 ### Sandbox Extension
 
