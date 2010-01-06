@@ -1,22 +1,16 @@
-Twig for Template Designers
-===========================
+テンプレートデザイナーのための Twig
+==================================
 
-This document describes the syntax and semantics of the template engine and
-will be most useful as reference to those creating Twig templates.
+このドキュメントではテンプレートエンジンの構文とセマンティックスを説明します。これによって Twig テンプレートを作るためにもっとも役に立つリファレンスになります。
 
-Synopsis
---------
+概要
+----
 
-A template is simply a text file. It can generate any text-based format (HTML,
-XML, CSV, LaTeX, etc.). It doesn't have a specific extension, `.html` or
-`.xml` are just fine.
+テンプレートはシンプルなテキストファイルです。これは任意のテキストベースのフォーマット (HTML、XML、CSV、LaTeX など) を生成できます。特定の拡張子、`.html` もしくは `.xml` はとてもよいものです。
 
-A template contains **variables** or **expressions**, which get replaced with
-values when the template is evaluated, and tags, which control the logic of
-the template.
+テンプレートは**変数**もしくは**式**を収めます。これらはテンプレートが評価されるとき、値、テンプレートのロジックをコントロールするタグに置き換えられます。
 
-Below is a minimal template that illustrates a few basics. We will cover the
-details later in that document:
+下記のコードはごくわずかな基本を描写するための最小のテンプレートです。詳細はこのドキュメントの後のほうで説明します:
 
     [twig]
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
@@ -36,79 +30,58 @@ details later in that document:
       </body>
     </html>
 
-There are two kinds of delimiters: `{% ... %}` and `{{ ... }}`. The first one
-is used to execute statements such as for-loops, the latter prints the result
-of an expression to the template.
+2種類の区切り文字: `{% ... %}` と `{{ ... }}` があります。前者は for ループなどを実行するのに使われ、後者は式の結果をテンプレートに表示します。
 
-Variables
----------
+変数
+----
 
-The application passes variables to the templates you can mess around in the
-template. Variables may have attributes or elements on them you can access
-too. How a variable looks like, heavily depends on the application providing
-those.
+アプリケーションはテンプレートに変数を渡します。テンプレートのなかで変数を扱うことができます。変数は属性もしくは要素 を収めることが可能でこれらにアクセスすることもできます。変数の見た目は、アプリケーションがどのように提供するのかに大いに依存します。
 
-You can use a dot (`.`) to access attributes of a variable, alternative the
-so-called "subscript" syntax (`[]`) can be used. The following lines do the
-same::
+変数の属性にアクセスするためにドット (`.`) を使うことができます。代わりにいわゆる"添字"構文 (`[]`) を使うこともできます。次の行は同じものです:
 
     [twig]
     {{ foo.bar }}
     {{ foo['bar'] }}
 
 >**NOTE**
->It's important to know that the curly braces are *not* part of the variable
->but the print statement. If you access variables inside tags don't put the
->braces around.
+>波かっこが変数の一部*ではなく* print ステートメントであることを知っていることが大切です。タグ内部の変数にアクセスする場合かっこで囲まないでください。
 
-If a variable or attribute does not exist you will get back a `null` value
-(which can be testes with the `none` expression).
+変数もしくは属性が存在しない場合、`null` の値が返ってきます (この値は `none` 式でテストできます)。
 
 >**SIDEBAR**
->Implementation
+>実装
 >
->For convenience sake `foo.bar` does the following things on
->the PHP layer:
+>利便性のために `foo.bar` は PHP レイヤーで次のことを行います:
 >
-> * check if `foo` is an array and `bar` a valid element;
-> * if not, and if `foo` is an object, check that `bar` is a valid property;
-> * if not, and if `foo` is an object, check that `bar` is a valid method;
-> * if not, and if `foo` is an object, check that `getBar` is a valid method;
-> * if not, return a `null` value.
+> * `foo` が配列で `bar` が有効な要素であることをチェックします;
+> * そうではない場合、かつ `foo` がオブジェクトである場合、`bar` が有効なプロパティであることをチェックします;
+> * そうではない場合、かつ `foo` がオブジェクトである場合、`bar` が有効なメソッドであることをチェックします;
+> * そうではない場合、かつ `foo` がオブジェクトである場合、`getBar` が有効なメソッドであることをチェックします;
+> * そうではない場合、`null` の値を返します。
 >
->`foo['bar']` on the other hand works mostly the same with the a small
->difference in the order:
+>一方で `foo['bar']` は次の順序での小さな違い以外ほとんど同じように機能します:
 >
-> * check if `foo` is an array and `bar` a valid element;
-> * if not, return a `null` value.
+> * `foo` が配列で `bar` が有効な要素であることをチェックします;
+> * そうでなければ、`null` の値を返します
 >
->Using the alternative syntax is also useful to dynamically get attributes
->from arrays:
+>代替構文を使うことは配列から動的に属性を取得するのにも役立ちます:
 >
 >     [twig]
 >     foo[bar]
 
-Filters
--------
+フィルター
+----------
 
-Variables can by modified by **filters**. Filters are separated from the
-variable by a pipe symbol (`|`) and may have optional arguments in
-parentheses. Multiple filters can be chained. The output of one filter is
-applied to the next.
+変数は**フィルター**によって修正されます。フィルターはパイプ記号 (`|`) によって変数から区切られかっこのなかでオプション引数を記入することができます。複数のフィルターをつなげることができます。ひとつのフィルターの出力は次のフィルターに適用されます。
 
-`{{ name|striptags|title }}` for example will remove all HTML tags from the
-`name` and title-cases it. Filters that accept arguments have parentheses
-around the arguments, like a function call. This example will join a list by
-commas: `{{ list|join(', ') }}`.
+たとえば `{{ name|striptags|title }}` は `name` からすべての HTML タグを除去しタイトルケースバージョンに置き換えます。引数を受け取るフィルターは関数呼び出しのように引数をかっこで囲みます。次の例ではコンマによってリストをつなげます: `{{ list|join(', ') }}`
 
-The builtin filters section below describes all the builtin filters.
+下記の組み込みフィルターのセクションですべてのフィルターを説明します。
 
-Comments
+コメント
 --------
 
-To comment-out part of a line in a template, use the comment syntax `{# ... #}`.
-This is useful to comment out parts of the template for debugging or to
-add information for other template designers or yourself:
+テンプレートのなかで行の一部をコメントアウトするには、コメント構文: `{# ... #}` を使います。これはデバッグ作業のためにテンプレートの一部をコメントアウトするもしくはほかのテンプレートデザイナーもしくはあなた自身の情報を追加するのに便利です:
 
     [twig]
     {# note: disabled template because we no longer use this
@@ -117,30 +90,22 @@ add information for other template designers or yourself:
       {% endfor %}
     #}
 
-Whitespace Control
-------------------
+空白文字のコントロール
+---------------------
 
-In the default configuration whitespace is not further modified by the
-template engine, so each whitespace (spaces, tabs, newlines etc.) is returned
-unchanged. If the application configures Twig to `trim_blocks` the first
-newline after a template tag is removed automatically (like in PHP).
+デフォルトのコンフィギュレーションではホワイトスペースはテンプレートエンジンによってさらに修正されないので、それぞれのホワイトスペース(スペース、タブ、改行など)は未変更のまま返されます。アプリケーションが `trim_blocks` を使うよう Twig を設定する場合テンプレートタグの後の最初の改行は (PHP のように) 自動的に削除されます。
 
-Escaping
---------
+エスケーピング
+--------------
 
-It is sometimes desirable or even necessary to have Twig ignore parts it would
-otherwise handle as variables or blocks. For example if the default syntax is
-used and you want to use `{{` as raw string in the template and not start a
-variable you have to use a trick.
+Twig に通常は変数もしくはブロックとして処理される部分を無視させることが望ましいもしくは必要である場合があります。たとえばデフォルトの構文が使われテンプレートのなかで `{{` を生の文字列として使い変数で始まらない場合、トリックを使わなければなりません。
 
-The easiest way is to output the variable delimiter (`{{`) by using a variable
-expression:
+変数の式を利用して変数の区切り文字 (`{{`) を出力するやり方です:
 
     [twig]
     {{ '{{' }}
 
-For bigger sections it makes sense to mark a block `raw`. For example to put
-Twig syntax as example into a template you can use this snippet:
+より大きなセクションで `raw` ブロックとしてマークするのは合理的です。たとえば Twig 構文をテンプレートに入れるには次のスニペットが使えます:
 
     [twig]
     {% raw %}
@@ -151,22 +116,16 @@ Twig syntax as example into a template you can use this snippet:
       </ul>
     {% endraw %}
 
-Template Inheritance
---------------------
+テンプレート継承
+----------------
 
-The most powerful part of Twig is template inheritance. Template inheritance
-allows you to build a base "skeleton" template that contains all the common
-elements of your site and defines **blocks** that child templates can
-override.
+Twig のもっとも協力な部分はテンプレート継承です。テンプレート継承はサイトのすべての共通要素を収める基本的な"スケルトン"テンプレートを作り上げ子テンプレートがオーバーライドできる**ブロック**を定義することを可能にします。
 
-Sounds complicated but is very basic. It's easiest to understand it by
-starting with an example.
+ややこしく聞こえるかもしれませんがとても基本的です。具体例で始めるのがもっとも簡単です。
 
-### Base Template
+### 基底テンプレート
 
-This template, which we'll call `base.html`, defines a simple HTML skeleton
-document that you might use for a simple two-column page. It's the job of
-"child" templates to fill the empty blocks with content:
+このテンプレート `base.html` と呼びますが、シンプルな2カラムページに使える HTML スケルトンドキュメントを定義します。空のブロックに内容を満たすのは"子"テンプレートの仕事です:
 
     [twig]
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
@@ -187,13 +146,11 @@ document that you might use for a simple two-column page. It's the job of
       </div>
     </body>
 
-In this example, the `{% block %}` tags define four blocks that child
-templates can fill in. All the `block` tag does is to tell the template engine
-that a child template may override those portions of the template.
+この例では、`{% block %}` タグは子テンプレートが満たすことができる 4 つのブロックを定義します。`block` タグが行うことはテンプレートエンジンに子テンプレートがテンプレートのこれらの一部をオーバーライドできることを伝えることです。
 
-### Child Template
+### 子テンプレート
 
-A child template might look like this:
+子テンプレートは次のようになります:
 
     [twig]
     {% extends "base.html" %}
@@ -212,44 +169,29 @@ A child template might look like this:
       </p>
     {% endblock %}
 
-The `{% extends %}` tag is the key here. It tells the template engine that
-this template "extends" another template. When the template system evaluates
-this template, first it locates the parent. The extends tag should be the
-first tag in the template.
+ここでは `{% extends %}` タグがキーです。これはテンプレートエンジンにこのテンプレートが別のテンプレートを"継承する"よう指示します。テンプレートシステムがこのテンプレートを評価するとき、最初にこれらは親テンプレートを割り出します。extends タグはテンプレートの最初のタグになります。
 
-The filename of the template depends on the template loader. For example the
-`Twig_Loader_Filesystem` allows you to access other templates by giving the
-filename. You can access templates in subdirectories with a slash:
+テンプレートのファイル名はテンプレートローダーに依ります。たとえば `Twig_Loader_Filesystem` はファイル名を提供することでほかのテンプレートにアクセスすることを可能にします。スラッシュつきのサブディレクトリのなかのテンプレートにアクセスできます:
 
     [twig]
     {% extends "layout/default.html" %}
 
-But this behavior can depend on the application embedding Twig. Note that
-since the child template doesn't define the `footer` block, the value from the
-parent template is used instead.
+しかしこのふるまいは Twig を組み込むアプリケーションに依ります。子テンプレートが `footer` ブロックを定義しない場合、代わりに親テンプレートからの値が使われることに注意してください。
 
-You can't define multiple `{% block %}` tags with the same name in the same
-template. This limitation exists because a block tag works in "both"
-directions. That is, a block tag doesn't just provide a hole to fill - it also
-defines the content that fills the hole in the *parent*. If there were two
-similarly-named `{% block %}` tags in a template, that template's parent
-wouldn't know which one of the blocks' content to use.
+同じテンプレートのなかで同じ名前の `{% block %}` タグを複数定義することはできません。この制約が存在するのは block タグが"両方"の方向で働くからです。つまり、block タグは満たす穴を提供するだけでなく - *親*の穴を満たす内容も定義します。1つのテンプレートのなかに似たような名前を持つ2つの`{% block %}` タグがあれば、そのテンプレートの親は使う block の内容の一方がwかりません。
 
-If you want to print a block multiple times you can however use the `display`
-tag:
+1つのブロックを複数回表示したい場合は `display` タグを使います:
 
     [twig]
     <title>{% block title %}{% endblock %}</title>
     <h1>{% display title %}</h1>
     {% block body %}{% endblock %}
 
-Like PHP, Twig does not support multiple inheritance. So you can only have one
-extends tag called per rendering.
+PHP のように、Twig は多重継承をサポートしません。ですのでレンダリングごとにタグを拡張するものを呼び出すことのみできます。
 
-### Parent Blocks
+### 親ブロック
 
-It's possible to render the contents of the parent block by using the `parent`
-tag. This gives back the results of the parent block:
+`parent` タグを使って親タグの内容をレンダリングすることは可能です。これは親ブロックの結果を戻します:
 
     [twig]
     {% block sidebar %}
@@ -258,10 +200,9 @@ tag. This gives back the results of the parent block:
       {% parent %}
     {% endblock %}
 
-### Named Block End-Tags
+### 名前つきブロック終了タグ
 
-Twig allows you to put the name of the block after the end tag for better
-readability:
+Twig はよりよい可読性のために終了タグの後にブロックの名前をつけることができます:
 
     [twig]
     {% block sidebar %}
@@ -270,22 +211,20 @@ readability:
       {% endblock inner_sidebar %}
     {% endblock sidebar %}
 
-However the name after the `endblock` word must match the block name.
+しかしながら単語の `endblock` の後の名前はブロックの名前にマッチしなければなりません。
 
-### Block Nesting and Scope
+### ブロックのネストとスコープ
 
-Blocks can be nested for more complex layouts. Per default, blocks have access
-to variables from outer scopes:
+より複雑なレイアウトのためにブロックをネストにすることができます。デフォルトでは、ブロックは外側のスコープから変数にアクセスできます:
 
     [twig]
     {% for item in seq %}
       <li>{% block loop_item %}{{ item }}{% endblock %}</li>
     {% endfor %}
 
-### Block Shortcuts
+### ブロックのショートカット
 
-For blocks with few content, it's possible to have a shortcut syntax. The
-following constructs do the same:
+わずかな内容を伴うブロックに対して、省略構文を用意することが可能です。次のコンストラクトは同じことを行います:
 
     [twig]
     {% block title %}
@@ -297,60 +236,45 @@ following constructs do the same:
     [twig]
     {% block title page_title|title %}
 
-Note that as soon as you specify a second argument it's treated as short block
-and Twig won't look for a closing tag.
+2番目の引数を指定すると同時にこれはショーとブロックとして扱われ Twig は閉じタグとみなさなくなることに注意してください。
 
-Import Context Behavior
------------------------
+コンテキストのふるまいのインポート
+---------------------------------
 
-Per default included templates are passed the current context.
+デフォルトではインクルードされるテンプレートは現在のコンテキストに渡されます。
 
-The context that is passed to the included template includes variables defined
-in the template:
+インクルードされたテンプレートに渡されるコンテキストはそのテンプレートで定義される変数をインクルードします:
 
     [twig]
     {% for box in boxes %}
       {% include "render_box.html" %}
     {% endfor %}
 
-The included template `render_box.html` is able to access `box`.
+インクルードされたテンプレートの `render_box.html` は `box` にアクセスできます。
 
-HTML Escaping
--------------
+HTML エスケーピング
+-------------------
 
-When generating HTML from templates, there's always a risk that a variable
-will include characters that affect the resulting HTML. There are two
-approaches: manually escaping each variable or automatically escaping
-everything by default.
+テンプレートから HTML を生成するとき、HTML のレンダリングに影響を及ぼす文字が変数に含まれる危険性が常にあります。2つのアプローチがあります: 手動でそれぞれの変数をエスケーピングするかもしくはデフォルトですべてを自動的にエスケーピングするかです。
 
-Twig supports both, but what is used depends on the application configuration.
-The default configuration is no automatic escaping for various reasons:
+Twig は両方をサポートしますが、使われる方法はアプリケーションのコンフィギュレーションに依ります。さまざまな理由からデフォルトのコンフィギュレーションは自動エスケーピングではありません:
 
- * Escaping everything except of safe values will also mean that Twig is
-   escaping variables known to not include HTML such as numbers which is a
-   huge performance hit.
+ * 安全な値以外のすべての値をエスケープすることは Twig が数字など HTML に含まれないことがわかっているものもエスケーピングし、余分な大きいな負荷がかかることを意味します。
 
- * The information about the safety of a variable is very fragile. It could
-   happen that by coercing safe and unsafe values the return value is double
-   escaped HTML.
+ * 変数の安全性に関する情報はきわめて危ういものです。安全な値と安全ではない値を強制することで戻り値が二重にエスケーピングされた HTML になることもありえます。
 
 >**NOTE**
->Escaping is only supported if the *escaper* extension has been enabled.
+>エスケーピングは *escaper* エクステンションが有効である場合のみサポートされます。
 
-### Working with Manual Escaping
+### 手動エスケーピングに取り組む
 
-If manual escaping is enabled it's **your** responsibility to escape variables
-if needed. What to escape? If you have a variable that *may* include any of
-the following chars (`>`, `<`, `&`, or `"`) you **have to** escape it unless
-the variable contains well-formed and trusted HTML. Escaping works by piping
-the variable through the `|e` filter: `{{ user.username|e }}`.
+手動エスケーピングが有効な場合、必要に応じて変数をエスケーピングするのは**あなたの**責任です。何をエスケーピングすればよいのか？変数が次の文字: (`>`, `<`, `&`, or `"`) のどれかを含む*ことがある*場合変数が適格で信頼できる HTML を収めていない限りこの変数をエスケーピング*しなければ*なりません。エスケーピングは `|e` フィルター: `{{ user.username|e }}` を通して変数をパイプすることで機能します。
 
-### Working with Automatic Escaping
+### 自動エスケーピングに取り組む
 
-Automatic escaping is enabled when the `escaper` extension has been enabled.
+`escaper` エクステンションが有効になっているとき自動エスケーピングが有効になります。
 
-Whether automatic escaping is enabled or not, you can mark a section of a
-template to be escaped or not by using the `autoescape` tag:
+自動エスケーピングの有効無効に関わらず、`autoescape` タグを使うことでテンプレートのセクションをエスケーピングするかしないかを示すことができます:
 
     [twig]
     {% autoescape on %}
@@ -361,34 +285,26 @@ template to be escaped or not by using the `autoescape` tag:
       Everything will be outputed as is in this block
     {% endautoescape %}
 
-When automatic escaping is enabled everything is escaped by default except for
-values explicitly marked as safe. Those can be marked in the template by using
-the `|safe` filter.
+自動エスケーピングが有効なとき安全なものとして明確にマークされた値以外のすべてがエスケープされます。`safe` フィルターを使うことでこれらをテンプレートのなかでマークすることができます。
 
-Functions returning template data (like macros and `parent`) always return
-safe markup.
+(マクロと `parent` のように) テンプレートのデータを返す関数は常に安全なマークアップを返します。
 
 >**NOTE**
->Twig is smart enough to not escape an already escaped value by the `escape`
->filter.
+>Twig は `escape` フィルターによってすでにエスケープされた値をエスケープするほど賢くありません。
 
 -
 
 >**NOTE**
->The chapter for the developers give more information about when and how
->automatic escaping is applied.
+>開発者の章では自動エスケーピングがどのように適用されるのか詳しい情報を提供します。
 
-List of Control Structures
---------------------------
+制御構造の一覧
+--------------
 
-A control structure refers to all those things that control the flow of a
-program - conditionals (i.e. `if`/`elseif`/`else`), `for`-loops, as well as
-things like blocks. Control structures appear inside `{% ... %}` blocks.
+制御構造は、ブロックと同じように、プログラムのフローをコントロールするすべてのもの - 条件文 (すなわち `if`/`elseif`/`else`)、`for`-ループをサポートします。制御構造は `{% ... %}` ブロックの内側に現れます。
 
-### For
+### for
 
-Loop over each item in a sequence. For example, to display a list of users
-provided in a variable called `users`:
+それぞれの項目を順番にループします。たとえば、`users` という名前の変数に提供されるユーザーの一覧を表示するには:
 
     [twig]
     <h1>Members</h1>
@@ -399,58 +315,54 @@ provided in a variable called `users`:
     </ul>
 
 >**NOTE**
->A sequence can be either an array or an object implementing the `Iterator`
->interface.
+>シーケンスは配列もしくは `Iterator` インターフェイスを実装するオブジェクトのどちらかです。
 
-If you do need to iterate over a sequence of numbers, you can use the `..`
-operator (as of Twig 0.9.5):
+数のシーケンスをイテレートする必要があれば、`..` 演算子を使います (Twig 0.9.5 以降):
 
     [twig]
     {% for i in 0..10 %}
       * {{ i }}
     {% endfor %}
 
-The above snippet of code would print all numbers from 0 to 9 (the high value
-is never part of the generated array).
+上記のコードスニペットは 0 から 9 までのすべての数字を表示します (上限の値は生成される配列の一部にはなりません)。
 
-It can be also useful with letters:
+これは文字にも役立ちます:
 
     [twig]
     {% for letter in 'a'..'z' %}
       * {{ letter }}
     {% endfor %}
 
-The `..` operator can take any expression at both sides:
+`..` 演算子は両端で任意の式をとります:
 
     [twig]
     {% for letter in 'a'|upper..'z'|upper %}
       * {{ letter }}
     {% endfor %}
 
-If you need a step different from 1, you can use the `range` filter instead:
+差分が 1 とは異なるステップが必要な場合、代わりに `range` フィルターを使うことができます:
 
     [twig]
     {% for i in 0|range(10, 2) %}
       * {{ i }}
     {% endfor %}
 
-Inside of a `for` loop block you can access some special variables:
+`for` ループブロックの内側ではいくつかの特別な変数にアクセスすることができます:
 
-| Variable              | Description
+| 変数                  | 説明
 | --------------------- | -------------------------------------------------------------
-| `loop.index`          | The current iteration of the loop. (1 indexed)
-| `loop.index0`         | The current iteration of the loop. (0 indexed)
-| `loop.revindex`       | The number of iterations from the end of the loop (1 indexed)
-| `loop.revindex0`      | The number of iterations from the end of the loop (0 indexed)
-| `loop.first`          | True if first iteration
-| `loop.last`           | True if last iteration
-| `loop.length`         | The number of items in the sequence
+| `loop.index`          | ループの現在のイテレーション (インデックスが1)
+| `loop.index0`         | ループの現在のイテレーション (インデックスが0)
+| `loop.revindex`       | ループの終わりからのイテレーションの数 (インデックスが1)
+| `loop.revindex0`      | ループの終わりからのイテレーションの数 (インデックスが0)
+| `loop.first`          | イテレーションが最初の場合 True
+| `loop.last`           | イテレーションが最後の場合 True
+| `loop.length`         | シーケンスのなかのアイテムの個数
 
 >**NOTE**
->Unlike in PHP it's not possible to `break` or `continue` in a loop.
+>PHP のものとは異なり、ループのなかで `break` もしくは `continue` することはできません。
 
-If no iteration took place because the sequence was empty, you can render a
-replacement block by using `else`:
+シーケンスが空であるためにイテレーションが行われない場合、`else` を使って置き換えブロックをレンダリングすることができます:
 
     [twig]
     <ul>
@@ -461,8 +373,7 @@ replacement block by using `else`:
       {% endfor %}
     </ul>
 
-By default, a loop iterates over the values of the sequence. You can iterate
-on keys by using the `keys` filter:
+デフォルトでは、ループはシーケンスの値をイテレートします。`keys` フィルターを使ってキーでイテレートすることができます:
 
     [twig]
     <h1>Members</h1>
@@ -472,7 +383,7 @@ on keys by using the `keys` filter:
       {% endfor %}
     </ul>
 
-You can also access both keys and values:
+キーと値の両方にアクセスすることもできます:
 
     [twig]
     <h1>Members</h1>
@@ -483,14 +394,11 @@ You can also access both keys and values:
     </ul>
 
 >**NOTE**
->On Twig before 0.9.3, you need to use the `items` filter to access both the
->keys and values (`{% for key, value in users|items %}`).
+>Twig 0.9.3 以前では、キーと値の両方にアクセスするには `items` フィルターを使う必要があります (`{% for key, value in users|items %}`)。
 
-### If
+### if
 
-The `if` statement in Twig is comparable with the if statements of PHP. In the
-simplest form you can use it to test if a variable is defined, not empty or
-not false:
+Twig の `if` ステートメントは PHP の if ステートメントと互換性があります。もっともシンプルな形式において変数が定義され、空もしくは False ではないことをテストするためにこれを使うことができます:
 
     [twig]
     {% if users %}
@@ -501,8 +409,7 @@ not false:
       </ul>
     {% endif %}
 
-For multiple branches `elseif` and `else` can be used like in PHP. You can use
-more complex `expressions` there too:
+複数の分岐には `elseif` と `else` を PHP のように使うことができます。より複雑な `expressions` を使うこともできます:
 
     {% if kenny.sick %}
       Kenny is sick.
@@ -512,68 +419,59 @@ more complex `expressions` there too:
       Kenny looks okay --- so far
     {% endif %}
 
-### Macros
+### マクロ
 
-Macros are comparable with functions in regular programming languages. They
-are useful to put often used HTML idioms into reusable functions to not repeat
-yourself.
+マクロは通常のプログラミング言語の関数と互換性があります。これらは同じ作業を繰り返さないようによく使われる HTML イディオムを再利用可能な関数にします。
 
-Here a small example of a macro that renders a form element:
+フォーム要素をレンダリングするマクロの小さな例は次のとおりです:
 
     [twig]
     {% macro input(name, value, type, size) %}
       <input type="{{ type|default('text') }}" name="{{ name }}" value="{{ value|e }}" size="{{ size|default(20) }}" />
     {% endmacro %}
 
-Macros differs from native PHP functions in a few ways:
+いくつかの点でマクロはネイティブの PHP 関数とは異なります:
 
- * Default argument values are defined by using the `default` filter in the
-   macro body;
+ * デフォルトの引数の値はマクロのボディで `default` フィルターを使って定義されます;
 
- * Arguments of a macro are always optional.
+ * マクロの引数は常にオプションです。
 
-But as PHP functions, macros don't have access to the current template
-variables.
+PHP 関数ではありますが、現在のテンプレート変数にアクセスできません。
 
-Macros can be defined in any template, and always need to be "imported" before
-being used (see the Import section for more information):
+マクロは任意のテンプレートで定義可能で、使われる前に "import" される必要があります (詳細な情報は import のセクションを参照):
 
     [twig]
     {% import "forms.html" as forms %}
 
-The above `import` call imports the "forms.html" file (which can contain only
-macros, or a template and some macros), and import the functions as items of
-the `forms` variable.
+上記の `import` は "forms.html" ファイルのインポートを呼び出し (マクロのみ、もしくはテンプレートといくつかのマクロ)、`forms` 変数の項目として関数をインポートします。
 
-The macro can then be called at will:
+マクロは意のままに呼び出すことができます:
 
     [twig]
     <p>{{ forms.input('username') }}</p>
     <p>{{ forms.input('password', none, 'password') }}</p>
 
-### Filters
+### フィルター
 
-Filter sections allow you to apply regular Twig filters on a block of template
-data. Just wrap the code in the special `filter` section:
+フィルターセクションによって通常の Twig フィルターをテンプレートデータのブロックに適用することができるようになります。コードを特別な `filter` セクションに包みます:
 
     [twig]
     {% filter upper %}
       This text becomes uppercase
     {% endfilter %}
 
-You can also chain filters:
+フィルターを結びつけることもできます:
 
     [twig]
     {% filter lower|escape %}
       <strong>SOME TEXT</strong>
     {% endfilter %}
 
-It should returns `&lt;strong&gt;some text&lt;/strong&gt;`.
+`&lt;strong&gt;some text&lt;/strong&gt;` が返されます。
 
-### Assignments
+### 割り当て
 
-Inside code blocks you can also assign values to variables. Assignments use
-the `set` tag and can have multiple targets:
+コードブロック内部で値を変数に割り当てることもできます。割り当てには `set` タグを使い複数のターゲットを用意できます:
 
     [twig]
     {% set foo as 'foo' %}
@@ -586,39 +484,31 @@ the `set` tag and can have multiple targets:
 
     {% set foo, bar as 'foo', 'bar' %}
 
-### Extends
+### extends
 
-The `extends` tag can be used to extend a template from another one. You can
-have multiple of them in a file but only one of them may be executed at the
-time. There is no support for multiple inheritance. See the section about
-Template inheritance above.
+`extends` タグは1つのテンプレートが別のテンプレートを継承するのに使うことができます。1つのファイルにこれらを複数入れることができますが一度に実行されるのはこれらの1つのみです。多重継承はありません。上記のテンプレート継承を参照してください。
 
-### Block
+### ブロック
 
-Blocks are used for inheritance and act as placeholders and replacements at
-the same time. They are documented in detail as part of the section about
-Template inheritance above.
+ブロックは継承に使われプレースホルダーとしてふるまい置き換えが同時に行われます。これらは上記のテンプレート継承のセクションで詳しく記述されています。
 
-### Include
+### include
 
-The `include` statement is useful to include a template and return the
-rendered contents of that file into the current namespace:
+`include` ステートメントはテンプレートをインクルードしてそのファイルのレンダリングされた内容を現在の名前空間に返します:
 
     [twig]
     {% include 'header.html' %}
       Body
     {% include 'footer.html' %}
 
-Included templates have access to the variables of the active context.
+インクルードされるテンプレートはアクティブなコンテキストの変数にアクセスできます。
 
-An included file can be evaluated in the sandbox environment by appending
-`sandboxed` at the end if the `escaper` extension has been enabled:
+インクルードされるファイルは `escaper` エクステンションが有効にされている場合に行の終わりに `sandboxed` を追加することでサンドボックス環境のななかで評価されます:
 
     [twig]
     {% include 'user.html' sandboxed %}
 
-You can also restrict the variables passed to the template by explicitly pass
-them as an array:
+変数を配列として明確に渡すことでテンプレートに渡される変数を制限することもできます:
 
     [twig]
     {% include 'foo' with ['foo': 'bar'] %}
@@ -626,22 +516,19 @@ them as an array:
     {% set vars as ['foo': 'bar'] %}
     {% include 'foo' with vars %}
 
-The most secure way to include a template is to use both the `sandboxed` mode,
-and to pass the minimum amount of variables needed for the template to be
-rendered correctly:
+テンプレートをインクルードするためのもっともセキュアな方法は `sandboxed` モードを使い、テンプレートを正しくレンダリングするために必要最小限の変数を渡すことです:
 
     [twig]
     {% include 'foo' sandboxed with vars %}
 
 >**NOTE**
->The `with` keyword is supported as of Twig 0.9.5.
+>`with` キーワードは Twig 0.9.5 でサポートされます。
 
-### Import
+### import
 
-Twig supports putting often used code into macros. These macros can go into
-different templates and get imported from there.
+Twig はよく使われるコードをマクロにまとめます。これらのマクロは異なるテンプレートに入れてそこからインポートできます。
 
-Imagine we have a helper module that renders forms (called `forms.html`):
+フォームをレンダリングするヘルパー (`forms.html`) がある状況を想像してください:
 
     [twig]
     {% macro input(name, value, type, size) %}
@@ -652,7 +539,7 @@ Imagine we have a helper module that renders forms (called `forms.html`):
       <textarea name="{{ name }}" rows="{{ rows|default(10) }}" cols="{{ cols|default(40) }}">{{ value|e }}</textarea>
     {% endmacro %}
 
-Importing these macros in a template is as easy as using the `import` tag:
+テンプレートのなかでこれらのマクロをインポートするのは簡単で `import` タグを使います:
 
     [twig]
     {% import 'forms.html' as forms %}
@@ -664,8 +551,7 @@ Importing these macros in a template is as easy as using the `import` tag:
     </dl>
     <p>{{ forms.textarea('comment') }}</p>
 
-Even if the macros are defined in the same template as the one where you want
-to use them, they still need to be imported:
+マクロが使いたいテンプレートのなかで定義されている場合でも、これらをインポートする必要があります:
 
     [twig]
     {# index.html template #}
@@ -678,151 +564,115 @@ to use them, they still need to be imported:
 
     <p>{{ forms.textarea('comment') }}</p>
 
-### Debug
+### デバッグ
 
-Whenever a template does not work as expected, the debug tag can be used to
-output the content of the current context:
+テンプレートが期待どおりに動かないときは、現在のコンテキストの内容を出力するためにデバッグタグを使うことができます:
 
     [twig]
     {% debug %}
 
-You can also output a specific variable or an expression:
+特定の変数もしくは式を出力することもできます:
 
     [twig]
     {% debug items %}
 
     {% debug post.body %}
 
-Note that this tag only works when the `debug` option of the environment is
-set to `true`.
+このタグは環境の `debug` オプションが `true` にセットされる場合のみ機能することに注意してください。
 
-Expressions
------------
+式
+--
 
-Twig allows basic expressions everywhere. These work very similar to regular
-PHP and even if you're not working with PHP you should feel comfortable with
-it.
+Twig では基本的な式はどこでも使うことができます。これらは通常の PHP ととても似た動きをし PHP に取り組んでいない場合、これを使うのが快適に感じるでしょう。
 
-The operator precedence is as follows, with the lowest-precedence operators
-listed first: `or`, `and`, `==`, `!=`, `<`, `>`, `>=`, `<=`, `in`, `+`, `-`,
-`~`, `*`, `/`, `%`, `//`, `not`, and `[`.
+演算子の優先順位が低い順の一覧は次のとおりです: `or`、`and`、`==`、`!=`、`<`, `>`、`>=`、`<=`、`in`、`+`、`-`、`~`、 `*`、`/`、`%`、`//`、`not`、そして `[`
 
-### Literals
+### リテラル
 
-The simplest form of expressions are literals. Literals are representations
-for PHP types such as strings, numbers, and arrays. The following literals
-exist:
+式のもっともシンプルな形式はリテラルです。リテラルは PHP の型の表現で、たとえば文字列、数字、配列などです。次のリテラルが存在します:
 
- * `"Hello World"`: Everything between two double or single quotes is a
-   string. They are useful whenever you need a string in the template (for
-   example as arguments to function calls, filters or just to extend or
-   include a template).
+ * `"Hello World"`: 2つのダブルクォートもしくはシングルクォートで囲まれるものはすべて文字列です。これらはテンプレートのなかで文字列が必要なときに便利です (たとえば関数呼び出しの引数、もしくはフィルターもしくはテンプレートを継承もしくはインクルードするため)。
 
- * `42` / `42.23`: Integers and floating point numbers are created by just
-   writing the number down. If a dot is present the number is a float,
-   otherwise an integer.
+ * `42` / `42.23`: 数字を書き留めるだけで数字と浮動小数点が作られます。ドットがあれば浮動少数点で、さもなければ整数です。
 
- * `[foo, bar]`: Arrays are defined by a sequence of expressions separated by
-   a comma (`,`) and wrapped with squared brackets (`[]`). As an array element
-   can be any valid expression, arrays can be nested. The array notation is
-   only available as of Twig 0.9.5.
+ * `[foo, bar]`: 配列はコンマ (`,`) によって区切られる式の文字列によって定義され角かっこ (`[]`) によって囲まれます。配列の要素は任意の有効な式になることが可能なので、配列をネストにすることができます。配列の表記は Twig 0.9.5 以降でのみ可能です。
 
- * `true` / `false` / `none`: `true` represents the true value, `false`
-   represents the false value.
+ * `true` / `false` / `none`: `true` は真の値を表し、`false` は偽の値を表します。
 
- * `none`: `none` represents no specific value (the equivalent of `null` in
-   PHP). This is the value returned when a variable does not exist.
+ * `none`: `none` は特定の値を表しません (PHP の `null` と同等)。これは変数が存在しない場合に返される値です。
 
-### Math
+### 数学
 
-Twig allows you to calculate with values. This is rarely useful in templates
-but exists for completeness' sake. The following operators are supported:
+Twig は値で計算することを可能にします。これはめったに使いませんが完全性のために存在します。次の演算子がサポートされます:
 
- * `+`: Adds two objects together. Usually the objects are numbers but if both
-   are strings or lists you can concatenate them this way. This however is not
-   the preferred way to concatenate strings! For string concatenation have a
-   look at the `~` operator. `{{ 1 + 1 }}` is `2`.
+ * `+`: 2つのオブジェクトを一緒に加えます。通常オブジェクトは数字ですが両方が文字列もしくはリストの場合この方法でこれらを連結させることができます。しかしながらこの方法は文字列を連結するのに望ましくありません！文字列の連結の例として `~` 演算子を見てみましょう。`{{ 1 + 1 }}` は `2` になります。
 
- * `-`: Substract the second number from the first one. `{{ 3 - 2 }}` is `1`.
+ * `-`: 最初の数値から2番目の数値を引きます。`{{ 3 - 2 }}` は `1` です。
 
- * `/`: Divide two numbers. The return value will be a floating point number.
-   `{{ 1 / 2 }}` is `{{ 0.5 }}`.
+ * `/`: 2つの数値で割ります。返される値は浮動少数点です。`{{ 1 / 2 }}` は `{{ 0.5 }}` です。
 
- * `%`: Calculate the remainder of an integer division. `{{ 11 % 7 }}` is `4`.
+ * `%`: は整数の割り算の余りを計算します。`{{ 11 % 7 }}` は `4` です。
 
- * `*`: Multiply the left operand with the right one. `{{ 2 * 2 }}` would
-   return `4`. This can also be used to repeat a string multiple times. `{{
-   '=' * 80 }}` would print a bar of 80 equal signs.
+ * `*`: 左側のオペランドと右側のオペランドを掛けます。`{{ 2 * 2 }}` は `4` を返します。これは文字列を複数回繰り返すのにも使われます。`{{ '=' * 80 }}` は80の等号記号を表示します。
 
- * `**`: Raise the left operand to the power of the right operand. `{{ 2**3
-   }}` would return `8`.
+ * `**`: 左側のオペランドを右側のオペランドでべき乗した値を算出します。`{{ 2**3 }}` は`8`を返します。
 
-### Logic
+### 論理学
 
-For `if` statements, `for` filtering or `if` expressions it can be useful to
-combine multiple expressions:
+`if` ステートメント、`for` フィルタリングもしくは `if` 式です。これは複数の式を組み合わせるのに役立ちます:
 
- * `and`: Return true if the left and the right operand is true.
+ * `and`: 左と右側のオペランドが true である場合 true を返します。
 
- * `or`: Return true if the left or the right operand is true.
+ * `or`: 左側と右側のオペランドのどちらかが true である場合 true を返します。
 
- * `not`: Negate a statement.
+ * `not`: ステートメントを否定します。
 
  * `(expr)`: Group an expression.
 
-### Comparisons
+### 比較
 
-The following comparison operators are supported in any expression: `==`,
-`!=`, `<`, `>`, `>=`, and `<=`.
+次の演算子は任意の式でサポートされます: `==`、`!=`、`<`, `>`、`>=`、と `<=`
 
 >**TIP**
->Besides PHP classic comparison operators, Twig also supports a shortcut
->notation when you want to test a value in a range:
+>PHP の古典的な比較演算子に加えて、Twig は値が指定の範囲のなかに収まるのかテストするための省略記法もサポートします:
 >
 >     [twig]
 >     {% if 1 < foo < 4 %}foo is between 1 and 4{% endif %}
 
-### Other Operators
+### その他の演算子
 
-The following operators are very useful but don't fit into any of the other
-two categories:
+次の演算子はとても便利ですがその他の2つのカテゴリには当てはまりません:
 
- * `in` (new in Twig 0.9.5): Perform containment test. Returns `true` if the
-   left operand is contained in the right. {{ 1 in [1, 2, 3] }} would for
-   example return `true`. To perform a negative test, the whole expression
-   should be prefixed with `not` ({{ not 1 in [1, 2, 3] }} would return
-   `false`).
+ * `in` (Twig 0.9.5 の新しい機能): 包含関係のテストを実行します。左側のオペランドが右側のオペランドに含まれる場合 `true` を返します。たとえば、`{{ 1 in [1, 2, 3] }}` は `true` を返します。逆のテストを行うには、式全体にプレフィックスとして `not` をつけます({{ not 1 in [1, 2, 3] }} は `false` を返します)。
 
- * `..` (new in Twig 0.9.5): Creates a sequence based on the operand before
-   and after the operator (see the `for` tag for some usage examples).
+ * `..` (Twig 0.9.5 の新しい機能): 演算子前後のオペランドをもとにシーケンスを作ります (使い方のいくつかの例は `for` タグを参照)。
 
- * `|`: Applies a filter.
+ * `|`: フィルターを適用する。
 
- * `~`: Converts all operands into strings and concatenates them. `{{ "Hello "
-   ~ name ~ "!" }}` would return (assuming `name` is `'John'`) `Hello John!`.
+ * `~`: すべてのオペランドを文字列に変換して連結します。`{{ "Hello " ~ name ~ "!" }}` は (`name` は `'John'` とします) `Hello John!` を返します。
 
- * `.`, `[]`: Get an attribute of an object.
+ * `.`, `[]`: オブジェクトの属性を取得します。
 
- * `?:`: Twig supports the PHP ternary operator:
+ * `?:`: Twig は PHP の三項演算子をサポートします:
 
         [twig]
         {{ foo ? 'yes' : 'no' }}
 
-List of Builtin Filters
+組み込みフィルターの一覧
 -----------------------
 
 ### `date`
 
-The `date` filter is able to format a date to a given format:
+`date` フィルターは日付を任意の書式に置き換えることができます:
 
     [twig]
     {{ post.published_at|date("m/d/Y") }}
 
-The `date` filter accepts both timestamps and `DateTime` instances.
+`date` フィルターはタイムスタンプと `DateTime` インスタンスの両方を受け取ります。
 
 ### `format`
 
-The `format` filter formats a given string by replacing the placeholders:
+`format` フィルターはプレースホルダーを置き換えることで任意の文字列をフォーマッティングします:
 
 
     [twig]
@@ -832,60 +682,52 @@ The `format` filter formats a given string by replacing the placeholders:
 
 ### `even`
 
-The `even` filter returns `true` if the given number is even, `false`
-otherwise:
+`even` フィルターは渡される値が偶数の場合、`true` を返し、そうでなければ `false` を返します:
 
     [twig]
     {{ var|even ? 'even' : 'odd' }}
 
 ### `odd`
 
-The `odd` filter returns `true` if the given number is odd, `false`
-otherwise:
+`odd` フィルターは渡される値が奇数の場合 `true` を返し、そうでなければ `false` を返します:
 
     [twig]
     {{ var|odd ? 'odd' : 'even' }}
 
 ### `floor`
 
-The `floor` filter divides two numbers and return the truncated integer
-result
+`floor` フィルターは2つの数を割り整数の商を返します:
 
     [twig]
     {{ 20|floor(7) }} {# returns 2 #}
 
 ### `encoding`
 
-The `encoding` filter URL encode a given string.
+`encoding` フィルターは任意の文字列を URL エンコーディングします。
 
 ### `title`
 
-The `title` filter returns a titlecased version of the value. I.e. words will
-start with uppercase letters, all remaining characters are lowercase.
+`title` フィルターは値のタイトルケースバージョンを返します。すなわち、単語は大文字で始まり、残りの文字は小文字になります。
 
 ### `capitalize`
 
-The `capitalize` filter capitalizes a value. The first character will be
-uppercase, all others lowercase.
+`capitalize` フィルターは値の最初の文字を大文字にしその他の文字を小文字にします。
 
 ### `upper`
 
-The `upper` filter converts a value to uppercase.
+`upper` フィルターは値を大文字に変換します。
 
 ### `lower`
 
-The `lower` filter converts a value to lowercase.
+`lower` フィルターは値を小文字に変換します。
 
 ### `striptags`
 
-The `striptags` filter strips SGML/XML tags and replace adjacent whitespace by
-one space.
+`striptags` フィルターは SGML/XML タグを剥ぎ取り隣接するスペースを1つのスペースに置き換えます。
 
 ### `join`
 
-The `join` filter returns a string which is the concatenation of the strings
-in the sequence. The separator between elements is an empty string per
-default, you can define it with the optional parameter:
+`join` フィルターはシーケンスの文字列の連結である文字列を返します。デフォルトでは要素の区切り文字は空の文字列で、オプションパラメーターで定義することができます:
 
     [twig]
     {{ [1, 2, 3]|join('|') }}
@@ -896,21 +738,19 @@ default, you can define it with the optional parameter:
 
 ### `reverse`
 
-The `reverse` filter reverses an array or an object if it implements the
-`Iterator` interface.
+`reverse` フィルターは配列もしくはオブジェクトが `Iterator` インターフェイスを実装する場合これを逆転させます。
 
 ### `length`
 
-The `length` filters returns the number of items of a sequence or mapping, or
-the length of a string.
+`length` フィルターはシーケンスもしくはマッピングのアイテムの数、もしくは文字列の長さを返します。
 
 ### `sort`
 
-The `sort` filter sorts an array.
+`sort` フィルターは配列をソートします。
 
-### `in` (new in Twig 0.9.5)
+### `in` (Twig 0.9.5 の新しい機能)
 
-Returns true if the value is contained within another one.
+値が別のものの範囲に収まっている場合 true を返します。
 
     [twig]
     {# returns true #}
@@ -919,10 +759,9 @@ Returns true if the value is contained within another one.
 
     {{ 'cd'|in('abcde') }}
 
-You can use this filter to perform a containment test on strings, arrays, or
-objects implementing the `Traversable` interface.
+文字列、配列、もしくは `Traversable` インターフェイスを実装するオブジェクトで包含テストを実施するためにこのフィルターを使うことができます。
 
-The `in` operator is a syntactic sugar for the `in` filter:
+`in` 演算子は `in` フィルターの構文糖衣です:
 
     [twig]
     {% if 1 in [1, 2, 3] %}
@@ -935,14 +774,11 @@ The `in` operator is a syntactic sugar for the `in` filter:
       TRUE
     {% endif %}
 
-### `range` (new in Twig 0.9.5)
+### `range` (Twig 0.9.5 の新しい機能)
 
-Returns a list containing a sequence of numbers. The left side of the filter
-represents the low value. The first argument of the filter is mandatory and
-represents the high value. The second argument is optional and represents the
-step (which defaults to `1`).
+数のシーケンスを含むリストを返します。フィルターの左側は小さいほうの値を表します。フィルターの最初の引数は必須で大きいほうの値を表します。2 番目の引数はオプションでステップを表します (デフォルトは `1`)。
 
-If you do need to iterate over a sequence of numbers:
+数のシーケンスをイテレートする必要がある場合:
 
     [twig]
     {% for i in 0|range(10) %}
@@ -950,10 +786,9 @@ If you do need to iterate over a sequence of numbers:
     {% endfor %}
 
 >**TIP**
->The `range` filter works as the native PHP `range` function.
+>`range` フィルターは PHP ネイティブの `range` 関数として機能します。
 
-The `..` operator (see above) is a syntactic sugar for the `range` filter
-(with a step of 1):
+`..` 演算子 (上記を参照) は `range` フィルターの構文糖です (ステップは 1):
 
     [twig]
     {% for i in 0|range(10) %}
@@ -968,35 +803,30 @@ The `..` operator (see above) is a syntactic sugar for the `range` filter
 
 ### `default`
 
-The `default` filter returns the passed default value if the value is
-undefined, otherwise the value of the variable:
+`default` フィルターは値が定義されていなければ渡されるデフォルト値を返し、そうでなければ変数の値を返します:
 
     [twig]
     {{ my_variable|default('my_variable is not defined') }}
 
 ### `keys`
 
-The `keys` filter returns the keys of an array. It is useful when you want to
-iterate over the keys of an array:
+`keys` フィルターは配列のキーを返します。配列のキーをイテレートしたい場合に便利です:
 
     [twig]
     {% for key in array|keys %}
         ...
     {% endfor %}
 
-### `escape`, `e`
+### `escape`、`e`
 
-The `escape` filter converts the characters `&`, `<`, `>`, `'`, and `"` in
-strings to HTML-safe sequences. Use this if you need to display text that
-might contain such characters in HTML.
+`escape` フィルターは文字列のなかの次の文字: `&`、`<`、`>`、`'`、 と `"` を安全な HTML シーケンスに変換します。これらのような文字が含まれる可能性があるテキストを HTML で表示する必要がある場合はこれを使います。
 
 >**NOTE**
->Internally, `escape` uses the PHP `htmlspecialchars` function.
+>内部では、`escape` は PHP の `htmlspecialchars` 関数を使います。
 
 ### `safe`
 
-The `safe` filter marks the value as safe which means that in an environment
-with automatic escaping enabled this variable will not be escaped.
+`safe` フィルターは変数を安全なものとしてマークします。このことは自動エスケーピングが有効な環境でこの変数がエスケープされないことを意味します。
 
     [twig]
     {% autoescape on }
