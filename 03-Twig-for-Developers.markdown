@@ -1,25 +1,19 @@
-Twig for Developers
+開発者のためのTwig
 ===================
 
-This chapter describes the API to Twig and not the template language. It will
-be most useful as reference to those implementing the template interface to
-the application and not those who are creating Twig templates.
+この章では、Twigのテンプレート言語についてではなくそのAPIについて説明します。
+Twigのテンプレートを書く人にとってではなく、アプリケーションへのテンプレートの窓口を実装する人にとって、この章はリファレンスとして最も役立つでしょう。
 
-Basics
+基本
 ------
 
-Twig uses a central object called the **environment** (of class
-`Twig_Environment`). Instances of this class are used to store the
-configuration and extensions, and are used to load templates from the file
-system or other locations.
+Twigは **環境** と呼ばれるTwig_Environmentクラスのオブジェクトを利用します。
+このクラスのインスタンスは、設定やエクステンションを保管したり、ファイルシステムかもしくは他の場所からテンプレートを読み込むのに利用されます。
 
-Most applications will create one `Twig_Environment` object on application
-initialization and use that to load templates. In some cases it's however
-useful to have multiple environments side by side, if different configurations
-are in use.
+ほとんどのアプリケーションは、最初にひとつのTwig_Environmentオブジェクトを生成し、テンプレートを読み込むのにそれを使うでしょう。
+もし違った設定を複数使うときでも、複数の環境を持つのは容易です。
 
-The simplest way to configure Twig to load templates for your application
-looks roughly like this:
+あなたのアプリケーションでテンプレートを読み込めるようにTwigを設定する最も単純な方法は、こういった感じです:
 
     [php]
     require_once '/path/to/lib/Twig/Autoloader.php';
@@ -30,166 +24,146 @@ looks roughly like this:
       'cache' => '/path/to/compilation_cache',
     ));
 
-This will create a template environment with the default settings and a loader
-that looks up the templates in the `/path/to/templates/` folder. Different
-loaders are available and you can also write your own if you want to load
-templates from a database or other resources.
+このコードはデフォルトの設定を持つ環境と `/path/to/templates/` フォルダの中からテンプレートを探すローダーを生成します。
+ローダーは違ったものでもいいですし、もしあなたがデータベースかもしくは他のリソースからテンプレートをロードしたい場合でも自分でローダーを書くことができます。
 
 >**CAUTION**
->Before Twig 0.9.3, the `cache` option did not exist, and the cache directory
->was passed as a second argument of the loader.
+>Twig 0.9.3 より前では、 `cache` オプションは存在しておらず、キャッシュディレクトリのパスはローダーの二番目の引数に渡されていました。
 
 -
 
 >**NOTE**
->Notice that the second argument of the environment is an array of options.
->The `cache` option is a compilation cache directory, where Twig caches the
->compiled templates to avoid the parsing phase for sub-sequent requests. It
->is very different from the cache you might want to add for the evaluated
->templates. For such a need, you can use any available PHP cache library.
+>環境の二番目の引数はオプションの配列であることに注目してください。
+>`cache` オプションは、コンパイル済みのキャッシュを格納するディレクトリで、
+>Twigは続いて起こるリクエストでのパースフェーズを避けるためにコンパイルされたテンプレートをキャッシュします。
+>このキャッシュは、あなたが追加したいかもしれない評価済みのテンプレートのキャッシュとは違います。
+>そういった必要がある場合は、あなたはどのPHPキャッシュライブラリを使うことができます。
+>このことは、すでに評価されたテンプレートをキャッシュすることとは違います。
 
-To load a template from this environment you just have to call the
-`loadTemplate()` method which then returns a `Twig_Template` instance:
+この環境からテンプレートを読み込むには、 `Twig_Template` インスタンスを返す `loadTemplate()` メソッドを呼び出すだけです:
 
     [php]
     $template = $twig->loadTemplate('index.html');
 
-To render the template with some variables, call the `render()` method:
+いくつかの変数とともにテンプレートを評価するには、 `render()` メソッドを呼び出します:
 
     [php]
     echo $template->render(array('the' => 'variables', 'go' => 'here'));
 
 >**NOTE**
->The `display()` method is a shortcut to output the template directly.
+>`display()` メソッドはテンプレートを直接出力するためのショートカットです。
 
-Environment Options
+環境のオプション
 -------------------
 
-When creating a new `Twig_Environment` instance, you can pass an array of
-options as the constructor second argument:
+新しい `Twig_Environment` インスタンスを生成するとき、コンストラクタの二番目の引数にオプションの配列を渡すことができます:
 
     [php]
     $twig = new Twig_Environment($loader, array('debug' => true));
 
-The following options are available:
+以下のオプションが利用可能です:
 
- * `debug`: When set to `true`, the generated templates have a `__toString()`
-   method that you can use to display the generated nodes (default to
-   `false`).
+ * `debug`: `true` にセットした時、生成されたテンプレートは生成された構文木を視覚化できるように `__toString()` メソッドを持ちます(デフォルトは `false`)。
 
- * `trim_blocks`: Mimicks the behavior of PHP by removing the newline that
-   follows instructions if present (default to `false`).
+ * `trim_blocks`: 次に続く命令が現れたら改行を消すというPHPの振る舞いを真似します(デフォルトは `false`)。
 
- * `charset`: The charset used by the templates (default to `utf-8`).
+ * `charset`: テンプレートで使われる文字コード (デフォルトは `utf-8`)。
 
- * `base_template_class`: The base template class to use for generated
-   templates (default to `Twig_Template`).
+ * `base_template_class`: 生成されたテンプレートの親となるクラス(デフォルトは `Twig_Template`)。
 
- * `cache`: It can take three values:
+ * `cache`: 三つの値のどれかを取る:
 
-    * `null` (the default): Twig will create a sub-directory under the system
-      temp directory to store the compiled templates (not recommended as
-      templates from two projects with the same name will share the same cache if
-      your projects share the same Twig source code).
+    * `null` (デフォルト): Twigはコンパイルされたテンプレートを置くためにシステムのテンポラリディレクトリの下にディレクトリを生成するでしょう
+      (もしあなたの複数のプロジェクトで同じTwigのソースコードを使うならば、二つのプロジェクトの同じ名前を持った二つのテンプレートは同じキャッシュを共有するため、非推奨です)。
 
-    * `false`: disable the compile cache altogether (not recommended).
+    * `false`: コンパイルキャッシュを全くの無効にする(非推奨)。
 
-    * An absolute path where to store the compiled templates.
+    * コンパイルされたテンプレートを置く絶対パス。
 
- * `auto_reload`: When developing with Twig, it's useful to recompile the
-   template whenever the source code changes. If you don't provide a value for
-   the `auto_reload` option, it will be determined automatically based on the
-   `debug` value.
+ * `auto_reload`: Twigを使って開発するとき、テンプレートのソースコードが変わったらコンパイルし直されるのは便利です。
+   もし `auto_reload` オプションに値を与えない場合、 このオプションは `debug` の値によって自動的に決定されるでしょう。
 
 >**CAUTION**
->Before Twig 0.9.3, the `cache` and `auto_reload` options did not exist. They
->was passed as a second and third arguments of the filesystem loader
->respectively.
+>Twig 0.9.3 より前では、 `cache` と `auto_reload` オプションは存在しません。
+>これらはそれぞれファイルシステムローダーの二番目と三番目の引数に渡されていました。
 
-Loaders
+ローダー
 -------
 
 >**CAUTION**
->This section describes the loaders as implemented in Twig version 0.9.4 and
->above.
+>このセクションは Twig 0.9.4以上のバージョンで実装されたローダーについて説明しています。
 
-Loaders are responsible for loading templates from a resource such as the file
-system.
+ローダーは、例えばファイルシステムのようなリソースからテンプレートを読み込むことを責務としています。
 
-### Compilation Cache
+### コンパイルキャッシュ
 
-All template loaders can cache the compiled templates on the filesystem for
-future reuse. It speeds up Twig a lot as the templates are only compiled once;
-and the performance boost is even larger if you use a PHP accelerator such as
-APC. See the `cache` and `auto_reload` options of `Twig_Environment` above for
-more information.
+全てのテンプレートローダーは、未来の再利用のためにコンパイル済みのテンプレートをファイルシステムにキャッシュすることができます。
+テンプレートは一度だけコンパイルされることでTwigはスピードアップします。
+さらにAPCのようなPHPアクセラレータを使えばさらにパフォーマンスを押し上げることができます。
+より詳しい情報については `Twig_Environment` の `cache` と `auto_reload` オプションを見てください。
 
-### Built-in Loaders
+### 組み込みのローダー
 
-Here a list of the built-in loaders Twig provides:
+以下がTwigの提供する組み込みのローダーのリストです:
 
- * `Twig_Loader_Filesystem`: Loads templates from the file system. This loader
-   can find templates in folders on the file system and is the preferred way
-   to load them.
+ * `Twig_Loader_Filesystem`: ファイルシステムからテンプレートを読み込みます。
+   このローダーはファイルシステムのフォルダからテンプレートを探すことができ、テンプレートを読み込むのに最もポピュラーな方法です。
 
         [php]
         $loader = new Twig_Loader_Filesystem($templateDir);
 
- * `Twig_Loader_String`: Loads templates from a string. It's a dummy loader as
-   you pass it the source code directly.
+ * `Twig_Loader_String`: 文字列からテンプレートを読み込みます。
+   これはソースコードを直接渡すためのダミーのローダーです。 
 
         [php]
         $loader = new Twig_Loader_String();
 
- * `Twig_Loader_Array`: Loads a template from a PHP array. It's passed an
-   array of strings bound to template names. This loader is useful for unit
-   testing.
+ * `Twig_Loader_Array`: PHPの配列からテンプレートを読み込みます。名前をキーとした文字列の配列を渡します。
+   このローダーはユニットテストの際に便利です。
 
         [php]
         $loader = new Twig_Loader_Array($templates);
 
 >**TIP**
->When using the `Array` or `String` loaders with a cache mechanism, you should
->know that a new cache key is generated each time a template content "changes"
->(the cache key being the source code of the template). If you don't want to
->see your cache grows out of control, you need to take care of clearing the old
->cache file by yourself.
+>`Array` かもしくは `String` ローダーをキャッシュとともに使う場合、
+>テンプレートの中身が変わる度に新しいキャッシュのためのキーが生成されることを知っておいてください(キャッシュキーはテンプレートのソースコードです)。
+>もしキャッシュがどんどん増えていくのを見たくない場合は、自分で古いキャッシュファイルを消していく必要があります。
 
-### Create your own Loader
+### 自分のローダーを作る
 
-All loaders implement the `Twig_LoaderInterface`:
+全てのローダーは `Twig_LoaderInterface` を実装します:
 
     [php]
     interface Twig_LoaderInterface
     {
       /**
-       * Gets the source code of a template, given its name.
+       * 与えられた名前からテンプレートのソースコードを得る。
        *
-       * @param  string $name string The name of the template to load
+       * @param  string $name 読み込むテンプレートの名前
        *
-       * @return string The template source code
+       * @return string テンプレートのソースコード
        */
       public function getSource($name);
 
       /**
-       * Gets the cache key to use for the cache for a given template name.
+       * 与えられたテンプレートの名前からキャッシュのために使うキーを得る。
        *
-       * @param  string $name string The name of the template to load
+       * @param  string $name 読み込むテンプレートの名前
        *
-       * @return string The cache key
+       * @return string キャッシュキー
        */
       public function getCacheKey($name);
 
       /**
-       * Returns true if the template is still fresh.
+       * もしテンプレートがまだ新鮮ならばtrueを返す。
        *
-       * @param string    $name The template name
-       * @param timestamp $time The last modification time of the cached template
+       * @param string    $name テンプレートの名前
+       * @param timestamp $time キャッシュされたテンプレートが最後に更新された時間
        */
       public function isFresh($name, $time);
     }
 
-As an example, here is how the built-in `Twig_Loader_String` reads:
+例として `Twig_Loader_String` がどのように実装されているか見てみましょう:
 
     [php]
     class Twig_Loader_String implements Twig_LoaderInterface
@@ -210,43 +184,39 @@ As an example, here is how the built-in `Twig_Loader_String` reads:
       }
     }
 
-The `isFresh()` method must return `true` if the current cached template is
-still fresh, given the last modification time, or `false` otherwise.
+`isFresh()` メソッドは、もし現在のキャッシュされたテンプレートが、
+与えられた最新の更新時間に対してまだ新鮮ならば `true` を、そうでなければ `false` を返します。
 
-Using Extensions
+エクステンションを使う
 ----------------
 
-Twig extensions are packages that adds new features to Twig. Using an
-extension is as simple as using the `addExtension()` method:
+Twigのエクステンションは、Twigに対して新しい機能を追加するパッケージです。
+エクステンションを使うには単に `addExtension()` メソッドを呼び出してください:
 
     [php]
     $twig->addExtension('Escaper');
 
-Twig comes bundled with three extensions:
+Twigは三つのエクステンションを予め持っています:
 
- * *Core*: Defines all the core features of Twig and is automatically
-   registered when you create a new environment.
+ * *Core*: Twigの核となる全ての機能を定義しており、あなたが新しい環境を生成した時に自動的に登録されます。
 
- * *Escaper*: Adds automatic output-escaping and the possibility to
-   escape/unescape blocks of code.
+ * *Escaper*: 出力を自動でエスケープする機能とescape/unescapeブロックのコードを使えるようにします。
 
- * *Sandbox*: Adds a sandbox mode to the default Twig environment, making it
-   safe to evaluated untrusted code.
+ * *Sandbox*: Twig環境にサンドボックスモードを付加します。サンドボックスは信頼できないコードの評価を安全にします。
 
-Built-in Extensions
+組み込みのエクステンション
 -------------------
 
-This section describes the features added by the built-in extensions.
+このセクションでは組み込みのエクステンションについている機能を説明します。
 
 >**TIP**
->Read the chapter about extending Twig to learn how to create your own
->extensions.
+>自分のエクステンションを作ってTwigを拡張するならこの章を読んでください。
 
-### Core Extension
+### コアエクステンション
 
-The `core` extension defines all the core features of Twig:
+`core` エクステンションはTwigの核となる全ての機能を定義しています:
 
-  * Tags:
+  * タグ:
 
      * `for`
      * `if`
@@ -257,7 +227,7 @@ The `core` extension defines all the core features of Twig:
      * `display`
      * `filter`
 
-  * Filters:
+  * フィルター:
 
      * `date`
      * `format`
@@ -279,81 +249,77 @@ The `core` extension defines all the core features of Twig:
      * `escape`
      * `e`
 
-The core extension does not need to be added to the Twig environment, as it is
-registered by default.
+コアエクステンションはTwig環境に登録する必要はありません。というのもデフォルトで登録されるからです。
 
-### Escaper Extension
+### エスケープエクステンション
 
-The `escaper` extension adds automatic output escaping to Twig. It defines a
-new tag, `autoescape`, and a new filter, `safe`.
+`escaper` エクステンションはTwigに自動的に出力をエスケープする機能を追加します。
+このエクステンションは `autoescape` という新しいタグと `safe` という新しいフィルターを定義します。
 
-When creating the escaper extension, you can switch on or off the global
-output escaping strategy:
+エスケープエクステンションを作る時、グローバルな出力エスケープ戦略をonかoffかに切り替えられます:
 
     [php]
     $escaper = new Twig_Extension_Escaper(true);
     $twig->addExtension($escaper);
 
-If set to `true`, all variables in templates are escaped, except those using
-the `safe` filter:
+`true` にセットすることで、テンプレート内のすべての変数は `safe` フィルターを使うときを除いてエスケープされます:
 
     [twig]
     {{ article.to_html|safe }}
 
-You can also change the escaping mode locally by using the `autoescape` tag:
+`autoescape` タグを使うことでエスケープのモードを局所的に変えることもできます:
 
     [twig]
     {% autoescape on %}
       {% var %}
-      {% var|safe %}     {# var won't be escaped #}
-      {% var|escape %}   {# var won't be doubled-escaped #}
+      {% var|safe %}     {# 変数はエスケープされない #}
+      {% var|escape %}   {# 変数は二回エスケープされない #}
     {% endautoescape %}
 
 >**WARNING**
->The `autoescape` tag has no effect on included files.
+>`autoescape` タグはインクルードされたファイルの中では効きません。
 
-The escaping rules are implemented as follows (it describes the behavior of
-Twig 0.9.5 and above):
+エスケープの規則は以下のように実装されています(Twig 0.9.5以上):
 
- * Literals (integers, booleans, arrays, ...) used in the template directly as
-   variables or filter arguments are never automatically escaped:
+ * 変数やフィルターの引数としてテンプレート内で使われるリテラル(整数, 真偽値, 配列等)は決して自動的にエスケープされません:
 
         [twig]
-        {{ "Twig<br />" }} {# won't be escaped #}
+        {{ "Twig<br />" }} {# エスケープされない #}
 
         {% set text as "Twig<br />" %}
-        {{ text }} {# will be escaped #}
+        {{ text }} {# エスケープされる #}
 
- * Escaping is applied before any other filter is applied (the reasoning
+ * エスケープはどんな他のフィルターより前に適用されます
+   (フィルターによる変換は安全であるべきで、したがってフィルターされる値やその全ての引数はエスケープされるから):
+   Escaping is applied before any other filter is applied (the reasoning
    behind this is that filter transformations should be safe, as the filtered
    value and all its arguments are escaped):
 
         [twig]
         {{ var|nl2br }} {# is equivalent to {{ var|escape|nl2br }} #}
 
- * The `safe` filter can be used anywhere in the filter chain:
+ * `safe` フィルターはフィルターチェインの何処ででも使えます:
 
         [twig]
-        {{ var|upper|nl2br|safe }} {# is equivalent to {{ var|safe|upper|nl2br }} #}
+        {{ var|upper|nl2br|safe }} {# これと同じ {{ var|safe|upper|nl2br }} #}
 
- * Automatic escaping is applied to filter arguments, except for literals:
+ * 自動的なエスケープはフィルターに渡されるリテラル以外の引数に適用されます:
 
         [twig]
-        {{ var|foo("bar") }} {# "bar" won't be escaped #}
-        {{ var|foo(bar) }} {# bar will be escaped #}
-        {{ var|foo(bar|safe) }} {# bar won't be escaped #}
+        {{ var|foo("bar") }} {# "bar" はエスケープされない #}
+        {{ var|foo(bar) }} {# bar はエスケープされる#}
+        {{ var|foo(bar|safe) }} {# bar はエスケープされない #}
 
- * Automatic escaping is not applied if one of the filter in the chain has the
-   `is_escaper` option set to `true` (this is the case for the built-in
-   `escaper`, `safe`, and `urlencode` filters for instance).
+ * もしフィルターチェインの中の一つが `is_escaper` オプションを `true` にセットするならば、自動的なエスケープは適用されません
+   (例えば組み込みの `escaper`, `safe`, `urlencode` フィルターの場合)。
 
-### Sandbox Extension
+### サンドボックスエクステンション
 
-The `sandbox` extension can be used to evaluate untrusted code. Access to
-unsafe attributes and methods is prohibited. The sandbox security is managed
-by a policy instance. By default, Twig comes with one policy class:
-`Twig_Sandbox_SecurityPolicy`. This class allows you to white-list some tags,
-filters, properties, and methods:
+このサンドボックスエクステンションは、信頼できないコードを評価するのに使います。
+安全ではない属性やメソッドへのアクセスは制限されます。
+サンドボックスのセキュリティはポリシーを表現するインスタンスによって管理されます。
+デフォルトでは、Twigはひとつのポリシーを表現するクラス、 `Twig_Sandbox_SecurityPolicy` を持っています。
+このクラスはホワイトリスト方式でタグやプロパティやメソッドの利用を許可します:
 
     [php]
     $tags = array('if');
@@ -366,42 +332,36 @@ filters, properties, and methods:
     );
     $policy = new Twig_Sandbox_SecurityPolicy($tags, $filters, $methods, $properties);
 
-With the previous configuration, the security policy will only allow usage of
-the `if` tag, and the `upper` filter. Moreover, the templates will only be
-able to call the `getTitle()` and `getBody()` methods on `Article` objects,
-and the `title` and `body` public properties. Everything else won't be allowed
-and will generate a `Twig_Sandbox_SecurityError` exception.
+上の設定では、セキュリティポリシーは `it` タグと `uppder` フィルターの利用を許可します。
+加えて、テンプレートでは `Article` オブジェクトの `getTitle()`, `getBody()` メソッドと、 
+`title`, `body` のパブリックなプロパティにだけアクセスできます。
+それ以外の全ては許可されず、 `Twig_Sandbox_SecurityError` 例外が投げられます。
 
-The policy object is the first argument of the sandbox constructor:
+ポリシーオブジェクトはサンドボックスのコンストラクタの最初の引数として渡します:
 
     [php]
     $sandbox = new Twig_Extension_Sandbox($policy);
     $twig->addExtension($sandbox);
 
-By default, the sandbox mode is disabled and should be enabled when including
-untrusted templates:
+デフォルトでは、サンドボックスモードは効いておらず、信頼できないコードをインクルードするときはこれを有効にすべきです:
 
     [php]
     {% include "user.html" sandboxed %}
 
-You can sandbox all templates by passing `true` as the second argument of the
-extension constructor:
+このエクステンションのコンストラクタの第二引数に `true` を渡すことで全てのテンプレートでサンドボックスを有効にできます:
 
     [php]
     $sandbox = new Twig_Extension_Sandbox($policy, true);
 
-Exceptions
+例外
 ----------
 
-Twig can throw exceptions:
+Twigは例外を投げることがあります:
 
- * `Twig_Error`: The base exception for all template errors.
+ * `Twig_Error`: すべてのテンプレートのエラーのベースとなる例外です。
 
- * `Twig_SyntaxError`: Thrown to tell the user that there is a problem with
-   the template syntax.
+ * `Twig_SyntaxError`: テンプレートの文法に問題が生じている事をユーザに知らせるために投げられます。
 
- * `Twig_RuntimeError`: Thrown when an error occurs at runtime (when a filter
-   does not exist for instance).
+ * `Twig_RuntimeError`: 実行時になんらかのエラーが出現したときに投げられます(例えばフィルターが存在しない時など)。
 
- * `Twig_Sandbox_SecurityError`: Thrown when an unallowed tag, filter, or
-   method is called in a sandboxed template.
+ * `Twig_Sandbox_SecurityError`: サンドボックス化されたテンプレートで許可されていないタグやフィルター、メソッド等が呼ばれた時に投げられます。
