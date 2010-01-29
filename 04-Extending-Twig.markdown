@@ -1,18 +1,15 @@
-Extending Twig
-==============
+Twig を拡張する
+===============
 
-Twig supports extensions that can add extra tags, filters, or even extend the
-parser itself with node transformer classes. The main motivation for writing
-an extension is to move often used code into a reusable class like adding
-support for internationalization.
+Twig はタグやフィルターを拡張可能で、またパーサー自身でさえノードの変換クラスとともに拡張するエクステンションをサポートしています。
+エクステンションを記述するための主要な動機は、国際化をサポートするクラスのような、再利用可能なクラスに頻繁に使用さえるコードを移動するためです。
 
-Most of the time, it is useful to create a single extension for your project,
-to host all the specific tags and filters you want to add to Twig.
+ほとんどの場合は、 Twig に追加したい特定のタグやフィルタを管理するために、あなたのプロジェクトにひとつの拡張機能を作成すると便利です。
 
-Anatomy of an Extension
------------------------
+エクステンションの解剖（学？）
+-----------------------------
 
-An extension is a class that implements the `Twig_ExtensionInterface`:
+エクステンションは `Twig_ExtensionInterface` を実装したクラスです:
 
     [php]
     interface Twig_ExtensionInterface
@@ -53,12 +50,9 @@ An extension is a class that implements the `Twig_ExtensionInterface`:
       public function getName();
     }
 
-Instead of you implementing the whole interface, your extension class can
-inherit from the `Twig_Extension` class, which provides empty implementations
-of all the above methods to keep your extension clean.
+インターフェース全体を実装する代わりに、エクステンションクラスは、エクステンションをきれいに保つために上記のすべてのメソッドの空の実装を提供する、 `Twig_Extension` クラスを継承することができます。
 
-The `getName()` method must always be implemented to return a unique
-identifier for the extension. Here is the most basic extension you can create:
+`getName()` メソッドはかならず、エクステンション毎にユニークな識別子を返すために実装しなければなりません。ここに、作成可能なもっとも基本的なエクステンションを示します:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -70,47 +64,42 @@ identifier for the extension. Here is the most basic extension you can create:
     }
 
 >**TIP**
->The bundled extensions are great examples of how extensions work.
+>バンドルされたエクステンションはエクステンションがどのように動作するかのすばらしい例です。
 
-Registering a custom extension is like registering any other extension:
+カスタム(?)エクステンションの追加は、他のエクステンションを追加するときと同様です:
 
     [php]
     $twig->addExtension(new Project_Twig_Extension());
 
-Defining new Filters
+フィルターを定義する
 --------------------
 
-The most common element you will want to add to Twig is filters. A filter is
+もっとも Twig に追加したいと思う共通の要素はフィルターでしょう。 A filter is
 just a regular PHP function or method that takes the left side of the filter
 as first argument and the arguments passed to the filter as extra arguments.
 
 >**CAUTION**
->This section describes the creation of new filters for Twig 0.9.5 and above.
+>このセクションでは Twig 0.9.5 以上でのフィルターの作り方について記述します。
 
-### Function Filters
+### 関数フィルター
 
-Let's create a filter, named `rot13`, which returns the
-[rot13](http://www.php.net/manual/en/function.str-rot13.php) transformation of
-a string:
+`rot13` という名前の、 [rot13](http://www.php.net/manual/en/function.str-rot13.php) 変換をおこなった文字列を返すフィルターを作成しましょう。
 
     [twig]
     {{ "Twig"|rot13 }}
 
-    {# should displays Gjvt #}
+    {# Gjvt が表示される #}
 
-A filter is defined as an object of class `Twig_Filter`.
+このフィルターは `Twig_Filter` クラスのオブジェクトで定義されます。
 
-The `Twig_Filter_Function` class can be used to define a filter implemented as
-a function:
+`Twig_Filter_Function` クラスは関数としてフィルターを定義することができます:
 
     [php]
     $filter = new Twig_Filter_Function('str_rot13');
 
-The first argument is the name of the function to call, here `str_rot13`, a
-native PHP function.
+最初の引数は関数をコールするための名前で、ここでは PHP のネイティブ関数の `str_rot13` です。
 
-Registering the filter in an extension means implementing the `getFilters()`
-method:
+エクステンションでフィルターを登録するということは、 `getFilters()` メソッドの実装をおこなうということです:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -128,8 +117,7 @@ method:
       }
     }
 
-Parameters passed to the filter are available as extra arguments to the
-function call:
+フィルターに渡されるパラメーターは関数コールの際の他の引数として有効です:
 
     [twig]
     {{ "Twig"|rot13('prefix_') }}
@@ -142,10 +130,9 @@ function call:
       return $prefix.str_rot13($string);
     }
 
-### Class Method Filters
+### クラスメソッドフィルター
 
-The `Twig_Filter_Function` class can also be used to register static method as
-filters:
+`Twig_Filter_Function` はスタティックなメソッドもフィルターとして登録することができます:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -168,10 +155,9 @@ filters:
       }
     }
 
-### Object Method Filters
+### オブジェクトメソッドフィルター
 
-You can also register methods as filters by using the `Twig_Filter_Method`
-class:
+`Twig_Filter_Method` を使うことで、メソッドをフィルターとして登録することもできます:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -194,9 +180,8 @@ class:
       }
     }
 
-Using methods for filters is a great way to package your filter without
-polluting the global namespace. This also gives the developer more flexibility
-at the cost of a small overhead.
+メソッドをフィルターとして使うことは、グローバルな名前空間を汚さずにフィルターをパッケージングするためのすぐれた方法です。
+わずかなオーバーヘッドで、開発者に柔軟性を与えます。
 
 ### Environment aware Filters
 
@@ -233,17 +218,15 @@ raw variable value. In such a case, set the `is_escaper` option to `true`:
 >the `is_escaper` option and they are always escaped according to the
 >automatic escaping rules.
 
-Overriding default Filters
---------------------------
+デフォルトのフィルターを上書きする（オーバーライドする）
+-------------------------------------------------------
 
 >**CAUTION**
->This section describes how to override default filters for Twig 0.9.5 and
->above.
+>このセクションでは Twig 0.9.5 でデフォルトのフィルターをオーバーライドする
+>方法について説明します。
 
-If some default core filters do not suit your needs, you can easily override
-them by creating your own core extension. Of course, you don't need to copy
-and paste the whole core extension code of Twig. Instead, you can just extends
-it and override the filter(s) by overriding the `getFilters()` method:
+もしデフォルトのフィルターがニーズに合わない場合、簡単にそれらを独自のコアエクステンションを作ることによって上書きできます。
+もちろん、 Twig のコアエクステンションのコード全体をコピー アンド ペーストする必要はありません。代わりに、それを拡張して `getFilters` メソッドをオーバーライドすることでフィルターを上書きできます:
 
     [php]
     class MyCoreExtension extends Twig_Extension_Core
@@ -264,9 +247,7 @@ it and override the filter(s) by overriding the `getFilters()` method:
       }
     }
 
-Here, we override the `date` filter with a custom one. Using this new core
-extension is as simple as registering the `MyCoreExtension` extension by
-calling the `addExtension()` method on the environment instance:
+ここでは `date` フィルターを拡張されたものに上書きしました。この新しいコアエクステンションを使うには `MyCoreExtension` エクステンションを登録するのと同じくらいシンプルで、 environment のインスタンスの `addExtension()` メソッドを呼ぶことです（※訳が怪しい）:
 
     [php]
     $twig = new Twig_Environment($loader, array('debug' => true, 'cache' => false));
@@ -283,14 +264,13 @@ already registered:
     $twig->addExtension(new Twig_Extension_Core());
     $twig->addExtension(new MyCoreExtension());
 
-Defining new Tags
------------------
+新しいタグを定義する
+--------------------
 
-One of the most exiting feature of a template engine like Twig is the
-possibility to define new language constructs.
+Twig のようなテンプレートエンジンのなかでもっともエキサイティングな機能のうちのひとつは、新しい言語構造を定義することです。
 
-Let's create a simple `set` tag that allows the definition of simple variables
-from within a template. The tag can be used like follows:
+テンプレート内の単純な変数を定義することを許す、シンプルな `set` タグを作ってみましょう。
+タグは以下のように使用することができます:
 
     [twig]
     {% set name as "value" %}
@@ -300,13 +280,12 @@ from within a template. The tag can be used like follows:
     {# should output value #}
 
 >**NOTE**
->The `set` tag is part of the Core extension and as such is always available.
->The built-in version is slightly more powerful and supports multiple
->assignments by default (cf. the template designers chapter for more
+>`set` タグはコアエクステンションの一部で、常に使用可能です。
+>組み込こまれたバージョンのものはもっとパワフルで複数の割り当てをデフォルトで許可します。
+>(cf. the template designers chapter for more
 >information).
 
-First, we need to create a `Twig_TokenParser` class which will be able to
-parse this new language construct:
+まず、 `Twig_TokenParser` クラスを新しい言語構造を追加するために作成する必要があります:
 
     [php]
     class Project_Twig_Set_TokenParser extends Twig_TokenParser
