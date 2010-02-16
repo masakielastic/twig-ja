@@ -1,36 +1,27 @@
-Hacking Twig
-============
+Twig をハックする
+=================
 
-Twig is very extensible and you can easily hack it. Keep in mind that you
-should probably try to create an extension before hacking the core, as most
-features and enhancements can be done with extensions. This chapter is also
-useful for people who want to understand how Twig works under the hood.
+Twig はとても拡張しやすく簡単にハックできます。たいていの機能と強化はエクステンションで実現可能なので、コアをハックする前にエクステンションを作ることになるであろうことを念頭においてください。この章は Twig の内部がどのように動いているのか理解したい人にも役立ちます。
 
-How Twig works?
----------------
+Twig はどのように動くのか？
+--------------------------
 
-The rendering of a Twig template can be summarized into four key steps:
+Twig テンプレートのレンダリングは 4 つのキーステップに要約できますs:
 
- * **Load** the template: If the template is already compiled, load it and go
-   to the *evaluation* step, otherwise:
+ * テンプレートを**ロードします**: テンプレートがすでにコンパイル済みである場合、これをロードして*評価*ステップに向かいます。そうでなければ:
 
-   * First, the **lexer** tokenizes the template source code into small pieces
-     for easier processing;
+   * 最初に、**レキサー**はテンプレートコードをより簡単に処理できる小さなピースにトークン化します;
 
-   * Then, the **parser** converts the token stream into a meaningful tree
-     of nodes (the Abstract Syntax Tree);
+   * それから、**パーサー**はトークンストリームをノードの意味あるツリーに変換します (Abstract Syntax Tree);
 
-   * Eventually, the *compiler* transforms the AST into PHP code;
+   * 最後に、*コンパイラー*は AST を PHP コードに変換します;
 
- * **Evaluate** the template: It basically means calling the `display()`
-   method of the compiled template and passing it the context.
+ * テンプレートを**評価します**: このことは基本的にコンパイル済みテンプレートの `display()` メソッドを呼び出しこれにコンテキストを渡すことを意味します。
 
-The Lexer
+レキサー
 ---------
 
-The Twig lexer goal is to tokenize a source code into a token stream (each
-token is of class `Token`, and the stream is an instance of
-`Twig_TokenStream`). The default lexer recognizes nine different token types:
+Twig レキサーはソースコードをトークンストリームにトークン化することを目的としています (それぞれのトークンは `Token` クラスで構成され、ストリームは `Twig_TokenStream` のインスタンスです)。デフォルトのレキサーは 9 つの異なるトークンの型を認識します:
 
   * `Twig_Token::TEXT_TYPE`
   * `Twig_Token::BLOCK_START_TYPE`
@@ -43,19 +34,17 @@ token is of class `Token`, and the stream is an instance of
   * `Twig_Token::OPERATOR_TYPE`
   * `Twig_Token::EOF_TYPE`
 
-You can manually convert a source code into a token stream by calling the
-`tokenize()` of an environment:
+環境の `tokenize()` を呼び出すことでソースコードをトークンストリームに手作業で変換できます:
 
     [php]
     $stream = $twig->tokenize($source, $identifier);
 
-As the stream has a `__toString()` method, you can have a textual
-representation of it by echoing the object:
+ストリームは `__toString()` メソッドを持つので、オブジェクトを echo することでテキスト表現ができます:
 
     [php]
     echo $stream."\n";
 
-Here is the output for the `Hello {{ name }}` template:
+`Hello {{ name }}` テンプレートの出力です:
 
     [txt]
     TEXT_TYPE(Hello )
@@ -64,13 +53,12 @@ Here is the output for the `Hello {{ name }}` template:
     VAR_END_TYPE()
     EOF_TYPE()
 
-You can change the default lexer use by Twig (`Twig_Lexer`) by calling the
-`setLexer()` method:
+`setLexer()` メソッドを呼び出すことで Twig のデフォルトレキサー (`Twig_Lexer`) を変更できます。
 
     [php]
     $twig->setLexer($lexer);
 
-Lexer classes must implement the `Twig_LexerInterface`:
+レキサーは `Twig_LexerInterface` を実装しなければなりません:
 
     [php]
     interface Twig_LexerInterface
@@ -86,25 +74,22 @@ Lexer classes must implement the `Twig_LexerInterface`:
       public function tokenize($code, $filename = 'n/a');
     }
 
-The Parser
-----------
+パーサー
+--------
 
-The parser converts the token stream into an AST (Abstract Syntax Tree), or a
-node tree (of class `Twig_Node_Module`). The core extension defines the basic
-nodes like: `for`, `if`, ... and the expression nodes.
+パーサーはトークンストリームを AST (Abstract Syntax Tree)、もしくは (`Twig_Node_Module` クラスの) ノードツリーに変換します。コアエクステンションは `for`、`if` のような基本ノード、式ノードを定義します。
 
-You can manually convert a token stream into a node tree by calling the
-`parse()` method of an environment:
+環境の `parse()` メソッドを呼び出すことでトークンストリームをノードツリーに手動で変換できます:
 
     [php]
     $nodes = $twig->parse($stream);
 
-Echoing the node object gives you a nice representation of the tree:
+ノードオブジェクトの echo はツリーのすばらしい表現方法です:
 
     [php]
     echo $nodes."\n";
 
-Here is the output for the `Hello {{ name }}` template:
+`Hello {{ name }}` テンプレートの出力は次の通りです:
 
     [txt]
     Twig_Node_Module(
@@ -114,13 +99,12 @@ Here is the output for the `Hello {{ name }}` template:
       )
     )
 
-The default parser (`Twig_TokenParser`) can be also changed by calling the
-`setParser()` method:
+デフォルトのパーサー (`Twig_TokenParser`) は `setParser()` メソッドを呼び出すことで変更することもできます:
 
     [php]
     $twig->setParser($parser);
 
-All Twig parsers must implement the `Twig_ParserInterface`:
+すべての Twig パーサーは `Twig_ParserInterface` を実装しなければなりません:
 
     [php]
     interface Twig_ParserInterface
@@ -135,23 +119,19 @@ All Twig parsers must implement the `Twig_ParserInterface`:
       public function parser(Twig_TokenStream $code);
     }
 
-The Compiler
+コンパイラー
 ------------
 
-The last step is done by the compiler. It takes a node tree as an input and
-generates PHP code usable for runtime execution of the templates. The default
-compiler generates PHP classes to ease the implementation of the template
-inheritance feature.
+最後のステップはコンパイラーによって行われます。これはノードツリーを入力としてとりテンプレートの実行時に利用可能な PHP コードを生成します。デフォルトのコンパイラーはテンプレート継承機能の実装を簡単にするために PHP クラスを生成します。
 
-You can call the compiler by hand with the `compile()` method of an
-environment:
+`compile()` メソッドを渡すことでコンパイラーを呼び出すことができます:
 
     [php]
     $php = $twig->compile($nodes);
 
-The `compile()` method returns the PHP source code representing the node.
+`compile()` メソッドはノードを表す PHP ソースコードを返します。
 
-The generated template for a `Hello {{ name }}` template reads as follows:
+`Hello {{ name }}` テンプレートのために生成されたテンプレートは次のような内容を読み込みます:
 
     [php]
     /* Hello {{ name }} */
@@ -167,13 +147,12 @@ The generated template for a `Hello {{ name }}` template reads as follows:
       }
     }
 
-As for the lexer and the parser, the default compiler (`Twig_Compiler`) can be
-changed by calling the `setCompiler()` method:
+レキサーとパーサーに関しては、デフォルトのコンパイラー (`Twig_Compiler`) は `setCompiler()` メソッドを呼び出すことで変更できます:
 
     [php]
     $twig->setCompiler($compiler);
 
-All Twig compilers must implement the `Twig_CompilerInterface`:
+すべての Twig コンパイラーは `Twig_CompilerInterface` を実装しなければなりません:
 
     [php]
     interface Twig_CompilerInterface
