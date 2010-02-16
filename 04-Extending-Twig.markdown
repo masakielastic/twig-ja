@@ -50,9 +50,9 @@ Twig はタグやフィルターを拡張可能で、またパーサー自身で
       public function getName();
     }
 
-インターフェース全体を実装する代わりに、エクステンションクラスは、エクステンションをきれいに保つために上記のすべてのメソッドの空の実装を提供する、 `Twig_Extension` クラスを継承することができます。
+インターフェイス全体を実装する代わりに、エクステンションクラスは、エクステンションをきれいに保つために上記のすべてのメソッドの空の実装を提供する、 `Twig_Extension` クラスを継承することができます。
 
-`getName()` メソッドはかならず、エクステンション毎にユニークな識別子を返すために実装しなければなりません。ここに、作成可能なもっとも基本的なエクステンションを示します:
+`getName()` メソッドはかならず、エクステンションごとにユニークな識別子を返すために実装しなければなりません。ここに、作成可能なもっとも基本的なエクステンションを示します:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -74,9 +74,7 @@ Twig はタグやフィルターを拡張可能で、またパーサー自身で
 フィルターを定義する
 --------------------
 
-もっとも Twig に追加したいと思う共通の要素はフィルターでしょう。 A filter is
-just a regular PHP function or method that takes the left side of the filter
-as first argument and the arguments passed to the filter as extra arguments.
+もっとも Twig に追加したいと思う共通の要素はフィルターでしょう。フィルターは単なる通常の PHP 関数もしくはメソッドで火左側のフィルターを最初の引数としてとり、追加の引数としてフィルターに渡される引数をとります。
 
 >**CAUTION**
 >このセクションでは Twig 0.9.5 以上でのフィルターの作り方について記述します。
@@ -180,53 +178,43 @@ as first argument and the arguments passed to the filter as extra arguments.
       }
     }
 
-メソッドをフィルターとして使うことは、グローバルな名前空間を汚さずにフィルターをパッケージングするためのすぐれた方法です。
-わずかなオーバーヘッドで、開発者に柔軟性を与えます。
+メソッドをフィルターとして使うことは、グローバルな名前空間を汚さずにフィルターをパッケージングするためのすぐれた方法です。わずかなオーバーヘッドで、開発者に柔軟性を与えます。
 
-### Environment aware Filters
+### フィルターを認識する環境
 
-The `Twig_Filter` classes take options as their last argument. For instance, if
-you want access to the current environment instance in your filter, set the
-`needs_environment` option to `true`:
+`Twig_Filter` クラスは最後の引数としてオプションをとります。たとえば、フィルターで現在の環境のインスタンスにアクセスしたい場合、`needs_environment` オプションを `true` にセットします:
 
     [php]
     $filter = new Twig_Filter_Function('str_rot13', array('needs_environment' => true));
 
-Twig will then pass the current environment as the first argument to the
-filter call:
+Twig はフィルター呼び出しに最初の引数として現在の環境を渡します:
 
     [php]
     function twig_compute_rot13(Twig_Environment $env, $string)
     {
-      // get the current charset for instance
+      // インスタンスの現在の文字セットを得る
       $charset = $env->getCharset();
 
       return str_rot13($string);
     }
 
-### Automatic Escaping
+### 自動エスケーピング
 
-If automatic escaping is enabled, the main value passed to the filters is
-automatically escaped. If your filter acts as an escaper, you will want the
-raw variable value. In such a case, set the `is_escaper` option to `true`:
+自動エスケーピングが有効な場合、フィルターに渡されるメインの値は自動的にエスケープされます。フィルターがエスケーパーとしてふるまう場合、名前の可変変数がほしくなります。そのような場合、`is_escaper` オプションを `true` にセットします:
 
     [php]
     $filter = new Twig_Filter_Function('urlencode', array('is_escaper' => true));
 
 >**NOTE**
->The parameters passed as extra arguments to the filters are not affected by
->the `is_escaper` option and they are always escaped according to the
->automatic escaping rules.
+>フィルターに追加引数として渡されるパラメーターは `is_escaper` オプションの影響を受けこれらは自動エスケーピングのルールにしたがってつねにエスケープされます。
 
 デフォルトのフィルターを上書きする（オーバーライドする）
--------------------------------------------------------
+-----------------------------------------------------
 
 >**CAUTION**
->このセクションでは Twig 0.9.5 でデフォルトのフィルターをオーバーライドする
->方法について説明します。
+>このセクションでは Twig 0.9.5 でデフォルトのフィルターをオーバーライドする方法について説明します。
 
-もしデフォルトのフィルターがニーズに合わない場合、簡単にそれらを独自のコアエクステンションを作ることによって上書きできます。
-もちろん、 Twig のコアエクステンションのコード全体をコピー アンド ペーストする必要はありません。代わりに、それを拡張して `getFilters` メソッドをオーバーライドすることでフィルターを上書きできます:
+もしデフォルトのフィルターがニーズに合わない場合、簡単にそれらを独自のコアエクステンションを作ることによって上書きできます。もちろん、 Twig のコアエクステンションのコード全体をコピー アンド ペーストする必要はありません。代わりに、それを拡張して `getFilters` メソッドをオーバーライドすることでフィルターを上書きできます:
 
     [php]
     class MyCoreExtension extends Twig_Extension_Core
@@ -253,12 +241,7 @@ raw variable value. In such a case, set the `is_escaper` option to `true`:
     $twig = new Twig_Environment($loader, array('debug' => true, 'cache' => false));
     $twig->addExtension(new MyCoreExtension());
 
-But I can already hear some people wondering how it can work as the Core
-extension is loaded by default. That's true, but the trick is that both
-extensions share the same unique identifier (`core` - defined in the
-`getName()` method). By registering an extension with the same name as an
-existing one, you have actually overridden the default one, even if it is
-already registered:
+しかしデフォルトで Core エクステンションがロードされるのと同じようにこれが動いているのでは考えている方々を存じております。これは正しいですが、トリックは両方のエクステンションが同じ一意の識別子 (`core` - `getName()` メソッドで定義される) を共有することです。既存のエクステンションと同じ名前でエクステンションを登録することで、すでに登録されたデフォルトのものを実際にオーバーライドできます:
 
     [php]
     $twig->addExtension(new Twig_Extension_Core());
@@ -280,10 +263,7 @@ Twig のようなテンプレートエンジンのなかでもっともエキサ
     {# should output value #}
 
 >**NOTE**
->`set` タグはコアエクステンションの一部で、常に使用可能です。
->組み込こまれたバージョンのものはもっとパワフルで複数の割り当てをデフォルトで許可します。
->(cf. the template designers chapter for more
->information).
+>`set` タグはコアエクステンションの一部で、常に使用可能です。組み込みバージョンのものはもっとパワフルで複数の割り当てをデフォルトで許可します (cf. 詳しい情報はテンプレートデザイナーの章で)。
 
 まず、 `Twig_TokenParser` クラスを新しい言語構造を追加するために作成する必要があります:
 
@@ -293,7 +273,7 @@ Twig のようなテンプレートエンジンのなかでもっともエキサ
       // ...
     }
 
-Of course, we need to register this token parser in our extension class:
+もちろん、トークンパーサーを既存のクラスに登録する必要があります:
 
     [php]
     class Project_Twig_Extension extends Twig_Extension
@@ -306,7 +286,7 @@ Of course, we need to register this token parser in our extension class:
       // ...
     }
 
-Now, let's see the actual code of the token parser class:
+では、トークンパーサークラスの実際のコードを見てみましょう:
 
     [php]
     class Project_Twig_Set_TokenParser extends Twig_TokenParser
@@ -329,30 +309,20 @@ Now, let's see the actual code of the token parser class:
       }
     }
 
-The `getTag()` method must return the tag we want to parse, here `set`. The
-`parse()` method is invoked whenever the parser encounters a `set` tag. It
-should return a `Twig_Node` instance that represents the node. The parsing
-process is simplified thanks to a bunch of methods you can call from the token
-stream (`$this->parser->getStream()`):
+`getTag()` メソッドは解析したいタグを返さなければなりません。ここでは `set` です。パーサーが `set` タグに遭遇するたびに `parse()` メソッドが起動します。これはノードを表す `Twig_Node` インスタンスを返します。解析プロセスはトークンストリームから呼び出しできる一連のメソッド (`$this->parser->getStream()`) のおかげで解析プロセスは簡略化されます:
 
- * `test()`: Tests the type and optionally the value of the next token and
-   returns it.
+ * `test()`: 型とオプションとしてトークンの値をテストしそれを返します。
 
- * `expect()`: Expects a token and returns it (like `test()`) or throw a
-   syntax error if not found (the second argument is the expected value of the
-   token).
+ * `expect()`: ( `test()` のように) トークンを要求しそれを返すもしくは見つからない場合構文エラーを返します (2 番目の引数はトークンの値が要求されます)。
 
- * `look()`: Looks a the next token. This is how you can have a look at the
-   next token without consume it.
+ * `look()`: 次のトークンを探します。これは次のトークンを消費せずに探す手段です。
 
-Parsing expressions is done by calling the `parseExpression()` like we did for
-the `set` tag.
+`set` タグに行ったように式の解析は `parseExpression()` を呼び出すことで行われます。
 
 >**TIP**
->Reading the existing `TokenParser` classes is the best way to learn all the
->nitty-gritty details of the parsing process.
+>既存の `TokenParser` クラスを読むことが解析プロセスの肝心な詳細をすべて学ぶためのベストな方法です。
 
-The `Project_Twig_Set_Node` class itself is rather simple:
+`Project_Twig_Set_Node` クラス自身はかなりシンプルです:
 
     [php]
     class Project_Twig_Set_Node extends Twig_Node
@@ -379,37 +349,29 @@ The `Project_Twig_Set_Node` class itself is rather simple:
       }
     }
 
-The compiler implements a fluid interface and provides methods that helps the
-developer generate beautiful and readable PHP code:
+コンパイラーは流れるようなインターフェイスを実装し開発者が美しくて読みやすい PHP コードを作り出すのを手助けするメソッドを提供します:
 
- * `subcompile()`: Compiles a node.
+ * `subcompile()`: ノードをコンパイルします。
 
- * `raw()`: Writes the given string as is.
+ * `raw()`: 任意の文字列をそのまま書き出します。
 
- * `write()`: Writes the given string by adding indentation at the beginning
-   of each line.
+ * `write()`: それぞれの行の冒頭にインデントを追加することで任意の文字列を書き出します。
 
- * `string()`: Writes a quoted string.
+ * `string()`: クォートつきの文字列を書き出します。
 
- * `repr()`: Writes a PHP representation of a given value (see `Twig_Node_For`
-   for a usage example).
+ * `repr()`: 任意の値の PHP 表現を書き出します (使い方の例は `Twig_Node_For` を参照)。
 
- * `pushContext()`: Pushes the current context on the stack (see
-   `Twig_Node_For` for a usage example).
+ * `pushContext()`: 現在のコンテキストをスタックにプッシュします (使い方の例は `Twig_Node_For` を参照)。
 
- * `popContext()`: Pops a context from the stack (see `Twig_Node_For` for a
-   usage example).
+ * `popContext()`: スタックからコンテキストをポップします (使い方の例は `Twig_Node_For` を参照)。
 
- * `addDebugInfo()`: Adds the line of the original template file related to
-   the current node as a comment.
+ * `addDebugInfo()`: 現在のノードに関連するオリジナルのテンプレートファイルの行をコメントとして追加します。
 
- * `indent()`: Indents the generated code (see `Twig_Node_Block` for a usage
-   example).
+ * `indent()`: 生成コードにインデントを追加します (使い方の例は `Twig_Node_Block` を参照)。
 
- * `outdent()`: Outdents the generated code (see `Twig_Node_Block` for a usage
-   example).
+ * `outdent()`: 生成コードのインデントを解除します (使い方の例は `Twig_Node_Block` を参照)。
 
-Creating a Node Transformer
----------------------------
+ノードトランスファーを作る
+--------------------------
 
-To be written...
+執筆中
