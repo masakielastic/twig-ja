@@ -1,12 +1,10 @@
-Recipes
+レシピ
 =======
 
-Making a Layout conditional
+レイアウトの条件分岐を作る
 ---------------------------
 
-Working with Ajax means that the same content is sometimes displayed as is,
-and sometimes decorated with a layout. But as Twig templates are compiled as
-PHP classes, wrapping an `extends` tag with an `if` tag does not work:
+Ajax と連携させることはときには同じ内容がそのまま表示されたり、レイアウトが伴うことがあることを意味します。しかし Twig テンプレートは PHP クラスとしてコンパイルされるので、`extends` タグを `if` タグでラップすると動きません:
 
     [twig]
     {# this does not work #}
@@ -19,7 +17,7 @@ PHP classes, wrapping an `extends` tag with an `if` tag does not work:
       This is the content to be displayed.
     {% endblock %}
 
-One way to solve this problem is to have two different templates:
+この問題を解決する方法の 1 つは 2 つの異なるテンプレートを用意することです:
 
     [twig]
     {# index.html #}
@@ -33,38 +31,32 @@ One way to solve this problem is to have two different templates:
     {# index_for_ajax.html #}
     This is the content to be displayed.
 
-Now, the decision to display one of the template is the responsibility of the
-controller:
+テンプレートの内容の 1 つを表示することを決定するのはコントローラーの責務です:
 
     [php]
     $twig->render($request->isAjax() ? 'index_for_ajax.html' : 'index.html');
 
-Making an Include dynamic
--------------------------
+インクルードを動的に行う
+-----------------------
 
-When including a template, its name does not need to be a string. For
-instance, the name can depend on the value of a variable:
+テンプレートをインクルードするとき、名前は文字列である必要はありません。たとえば、名前は可変変数の値に依存することができます:
 
     [twig]
     {% include var ~ '_foo.html' %}
 
-If `var` evaluates to `index`, the `index_foo.html` template will be
-rendered.
+`var` がevaluates to `index` に評価される場合、`index_foo.html` テンプレートがレンダリングされます。
 
-As a matter of fact, the template name can be any valid expression, such as
-the following:
+当然のことながら、テンプレートの名前には、次のような有効な正規表現が使えます:
 
     [twig]
     {% include var|default('index') ~ '_foo.html' %}
 
-Customizing the Syntax
+構文をカスタマイズする
 ----------------------
 
-Twig allows some syntax customization for the block delimiters. It's not
-recommended to use this feature as templates will be tied with your custom
-syntax. But for specific projects, it can make sense to change the defaults.
+Twig はブロック区切り文字の構文のカスタマイズを許可します。テンプレートがあなたのカスタム構文に結びつけられるのでこの機能を使うことはおすすめできません。しかし、特定のプロジェクトに対して、デフォルトを変更することがもっともであることがあります。
 
-To change the block delimiters, you need to create your own lexer object:
+ブロック区切り文字を変更するには、独自のレキサーオブジェクトを作る必要があります:
 
     [php]
     $twig = new Twig_Environment();
@@ -76,8 +68,7 @@ To change the block delimiters, you need to create your own lexer object:
     ));
     $twig->setLexer($lexer);
 
-Here are some configuration example that simulates some other template engines
-syntax:
+ほかのテンプレート構文をシミュレートするコンフィギュレーションの例として次のようなものがあります:
 
     [php]
     // Ruby erb syntax
@@ -101,15 +92,12 @@ syntax:
       'tag_variable' => array('{$', '}'),
     ));
 
-Using dynamic Object Properties
--------------------------------
+動的なオブジェクトプロパティを使う
+---------------------------------
 
-When Twig encounters a variable like `article.title`, it tries to find a
-`title` public property in the `article` object.
+Twig が `article.title` のような変数に遭遇するとき、`article` オブジェクトの `title` パブリックプロパティを見つけようとします。
 
-It also works if the property does not exist but is rather defined dynamically
-thanks to the magic `__get()` method; you just need to also implement the
-`__isset()` magic method like shown in the following snippet of code:
+プロパティが存在しないときに `__get()` マジックメソッドのおかげで動的に定義されることで動きます; 次のコードスニペットのような `__isset()` マジックメソッドを実装することも必要です:
 
     [php]
     class Article
@@ -135,26 +123,19 @@ thanks to the magic `__get()` method; you just need to also implement the
       }
     }
 
-Making the Templates aware of the Context
------------------------------------------
+テンプレートにコンテキストを考慮させる
+-------------------------------------
 
-Sometimes, you want to make the templates aware of some "context" of your
-application. But by default, the compiled templates are only passed an array
-of parameters.
+ときには、テンプレートをアプリケーションの何らかの「コンテキスト」に対応させたいことがあります。しかしデフォルトでは、コンパイル済みのテンプレートはパラメーターの配列としてのみ渡されます。
 
-When rendering a template, you can pass your context objects along, but it's
-not very practical. There is a better solution.
+テンプレートをレンダリングするとき、コンテキストをオブジェクトに渡すことができますが、あまり現実的ではありません。よりよい解決方法があります。
 
-By default, all compiled templates extends a base class, the built-in
-`Twig_Template`. This base class is configurable with the
-`base_template_class` option:
+デフォルトでは、すべてのコンパイル済みのテンプレートは基底クラスであり組み込みクラスの `Twig_Template` を継承します。この基底クラスのコンフィギュレーションは `base_template_class` オプションで調整可能です:
 
     [php]
     $twig = new Twig_Environment($loader, array('base_template_class' => 'ProjectTemplate'));
 
-Now, all templates will automatically extend the custom `ProjectTemplate`
-class. Create the `ProjectTemplate` and add some getter/setter methods to
-allow communication between your templates and your application:
+すべてのテンプレートは自動的に `ProjectTemplate` カスタムクラスを継承します。`ProjectTemplate` を作りテンプレートとアプリケーションのあいだのコミュニケーションを可能にするゲッター/セッターメソッドをいくつか追加します:
 
     [php]
     class ProjectTemplate extends Twig_Template
@@ -172,5 +153,4 @@ allow communication between your templates and your application:
       }
     }
 
-Now, you can use the setter to inject the context whenever you create a
-template, and use the getter from within your custom nodes.
+これで、テンプレートを作るときにコンテキストを注入するのにセッターを使い、カスタムノードのなかでゲッターを使うことができます。
